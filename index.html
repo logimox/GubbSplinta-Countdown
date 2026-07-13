@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Repeterande nedräkning</title>
-  <meta name="description" content="Repeterande nedräkning med Chaos Theory-mappslumpare från bilden.">
+  <meta name="description" content="Repeterande nedräkning med Chaos Theory-mappslumpare.">
   <style>
     :root, [data-theme="light"] {
       --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
@@ -62,7 +62,7 @@
     <section class="hero">
       <div class="eyebrow">Återkommande målpunkt</div>
       <h1>Nedräkning till tisdag 20:30</h1>
-      <p class="lead">Nu med mappslumpare byggd på filnamnen i din bild.</p>
+      <p class="lead">V 1,5 med mappslumpare.</p>
     </section>
 
     <section class="layout">
@@ -105,10 +105,10 @@
 
     <section class="card" style="margin-top:1.5rem;">
       <h2>Chaos Theory mappslumpare</h2>
-      <p class="hint">P = Phoenix, E = Enhanced enligt din förklaring.</p>
+      <p class="hint">P = Phoenix, E = Enhanced.</p>
       <div class="actions">
         <button class="btn primary" type="button" id="randomizeMaps">Slumpa 4</button>
-        <button class="btn" type="button" id="copyMapNames">Kopiera bara filnamn</button>
+        <button class="btn" type="button" id="copyMapNames">Kopiera filnamnet</button>
       </div>
       <div class="map-list" id="mapList"></div>
       <p class="copy-status" id="copyStatus"></p>
@@ -221,7 +221,7 @@
           <div class="map-name">${map.full}</div>
         </div>
       `).join('');
-      copyStatus.textContent = 'Nya mappar slumpade. Sista platsen är alltid Steel Squat eller Zioplex.';
+      copyStatus.textContent = 'Nya mappar slumpade.';
     }
 
     async function copyMapNames() {
