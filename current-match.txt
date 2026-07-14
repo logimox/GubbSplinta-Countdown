@@ -1,11 +1,11 @@
 GubbSplinta Matchoff
-Uppdaterad: 2026-07-14T22:08:40.136Z
+Uppdaterad: 2026-07-14T22:09:48.306Z
 Spel: TISDAG 20:30
 Nästa tillfälle: TISDAG 21 JULI 2026 KL 20:30
-Tid kvar: 6 d, 20 h, 21 min, 20 sek
+Tid kvar: 6 d, 20 h, 20 min, 11 sek
 
 Aktuellt kartförslag:
-1. PolaP.sdc — Polar Base
-2. WareP.sdc — Warehouse
-3. KrauU.sdc — Krauser Lab
+1. AquaE.sdc — Aqua
+2. ScheU.sdc — Schermerhorn
+3. PolaP.sdc — Polar Base
 4. ZiopD.sdc — Zioplex
