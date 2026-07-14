@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GubbSplinta Matchoff</title>
-  <meta name="description" content="Repeterande nedräkning med regnig Splinter Cell-känsla och Discord-postning.">
+  <meta name="description" content="Repeterande nedräkning med regnig Splinter Cell-känsla, Discord-postning och GitHub-synk.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
         <div class="mist"></div>
       </div>
       <p class="eyebrow">// OPERATION: GUBBSPLINTA //</p>
-      <h1 id="heroTitle">GUBBSPLINTA</h1>
+      <h1>GUBBSPLINTA</h1>
       <p class="subline">TACTICAL COUNTDOWN PROTOCOL</p>
     </section>
 
@@ -51,14 +51,6 @@
     <section class="panel settings">
       <h2>Boka om</h2>
       <form id="countdownForm" class="settings-grid">
-        <div>
-          <label for="title">Rubrik</label>
-          <input class="input" id="title" type="text" value="GUBBSPLINTA">
-        </div>
-        <div>
-          <label for="workerUrl">Discord Worker-URL</label>
-          <input class="input" id="workerUrl" type="url" value="https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/post-maps" placeholder="https://din-worker.workers.dev/post-maps">
-        </div>
         <div class="two">
           <div>
             <label for="weekday">Veckodag</label>
@@ -94,17 +86,15 @@
   </main>
 
   <script>
+    const WORKER_URL = 'https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/post-maps';
     const weekdayNames = ['SÖNDAG','MÅNDAG','TISDAG','ONSDAG','TORSDAG','FREDAG','LÖRDAG'];
     const form = document.getElementById('countdownForm');
-    const titleInput = document.getElementById('title');
     const weekdayInput = document.getElementById('weekday');
     const timeInput = document.getElementById('timeText');
-    const workerUrlInput = document.getElementById('workerUrl');
     const targetText = document.getElementById('targetText');
     const countdownNote = document.getElementById('countdownNote');
     const copyStatus = document.getElementById('copyStatus');
     const mapList = document.getElementById('mapList');
-    const heroTitle = document.getElementById('heroTitle');
     const footLine = document.getElementById('footLine');
     const postDiscordBtn = document.getElementById('postDiscord');
     const els = { days: document.getElementById('days'), hours: document.getElementById('hours'), minutes: document.getElementById('minutes'), seconds: document.getElementById('seconds') };
@@ -142,7 +132,7 @@
     ];
     let maps = [...defaultMaps];
     let currentMapPick = [];
-    let currentConfig = { title: 'GUBBSPLINTA', weekday: 2, time: '20:30' };
+    let currentConfig = { weekday: 2, time: '20:30' };
 
     function validTime(value) {
       return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(value);
@@ -177,7 +167,6 @@
       els.hours.textContent = String(Math.floor((totalSeconds % 86400) / 3600)).padStart(2, '0');
       els.minutes.textContent = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
       els.seconds.textContent = String(totalSeconds % 60).padStart(2, '0');
-      heroTitle.textContent = currentConfig.title || 'GUBBSPLINTA';
       targetText.textContent = 'NÄSTA INSATS: ' + formatTarget(next);
       countdownNote.textContent = 'KVAR TILL SPEL: ' + formatRemaining(totalSeconds);
       footLine.textContent = 'ORDINARIE: VARJE ' + weekdayNames[currentConfig.weekday] + ' ' + currentConfig.time + ' · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX';
@@ -264,7 +253,7 @@
       const now = new Date();
       const start = new Date(now.getTime() + 30 * 60 * 1000);
       const end = new Date(start.getTime() + 60 * 60 * 1000);
-      const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GubbSplinta Matchoff//Discord Ready//SV','CALSCALE:GREGORIAN'];
+      const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GubbSplinta Matchoff//GitHub Sync//SV','CALSCALE:GREGORIAN'];
       currentMapPick.forEach((map, index) => {
         lines.push('BEGIN:VEVENT');
         lines.push('UID:gubbsplinta-' + now.getTime() + '-' + index + '@local');
@@ -292,16 +281,10 @@
         copyStatus.textContent = 'SLUMPA MAPPAR FÖRST.';
         return;
       }
-      const workerUrl = workerUrlInput.value.trim();
-      if (!workerUrl) {
-        copyStatus.textContent = 'ANGE DIN WORKER-URL.';
-        workerUrlInput.focus();
-        return;
-      }
       const next = getNextOccurrence(currentConfig.weekday, currentConfig.time);
       const totalSeconds = Math.max(0, Math.floor((next - new Date()) / 1000));
       const payload = {
-        title: currentConfig.title || 'GubbSplinta Matchoff',
+        title: 'GubbSplinta Matchoff',
         weekday: weekdayNames[currentConfig.weekday],
         time: currentConfig.time,
         targetDate: formatTarget(next),
@@ -309,18 +292,18 @@
         maps: currentMapPick
       };
       postDiscordBtn.disabled = true;
-      copyStatus.textContent = 'POSTAR TILL DISCORD...';
+      copyStatus.textContent = 'POSTAR TILL DISCORD OCH SYNKAR FIL...';
       try {
-        const response = await fetch(workerUrl, {
+        const response = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.error || 'Postning misslyckades');
-        copyStatus.textContent = 'DISCORD-POST SKICKAD.';
+        copyStatus.textContent = 'DISCORD-POST OCH GITHUB-SYNK KLAR.';
       } catch (error) {
-        copyStatus.textContent = 'FEL VID DISCORD-POST: ' + error.message;
+        copyStatus.textContent = 'FEL: ' + error.message;
       } finally {
         postDiscordBtn.disabled = false;
       }
@@ -333,14 +316,13 @@
         timeInput.focus();
         return;
       }
-      currentConfig = { title: titleInput.value.trim() || 'GUBBSPLINTA', weekday: Number(weekdayInput.value), time: timeValue };
+      currentConfig = { weekday: Number(weekdayInput.value), time: timeValue };
       updateCountdown();
-      copyStatus.textContent = 'TID OCH RUBRIK UPPDATERAD.';
+      copyStatus.textContent = 'BOKNING UPPDATERAD.';
     });
     document.getElementById('presetTuesday').addEventListener('click', () => {
       weekdayInput.value = '2';
       timeInput.value = '20:30';
-      titleInput.value = 'GUBBSPLINTA';
       form.requestSubmit();
     });
     document.getElementById('randomizeMaps').addEventListener('click', renderMaps);
