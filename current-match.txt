@@ -1,11 +1,11 @@
 GubbSplinta Matchoff
-Uppdaterad: 2026-07-14T21:44:31.809Z
+Uppdaterad: 2026-07-14T22:08:40.136Z
 Spel: TISDAG 20:30
 Nästa tillfälle: TISDAG 21 JULI 2026 KL 20:30
-Tid kvar: 6 d, 20 h, 45 min, 29 sek
+Tid kvar: 6 d, 20 h, 21 min, 20 sek
 
 Aktuellt kartförslag:
-1. KrauU.sdc — Krauser Lab
-2. Sance.sdc — Sanctuary
-3. SkysD.sdc — SpyScraper
-4. SteeP.sdc — Steel Squat
+1. PolaP.sdc — Polar Base
+2. WareP.sdc — Warehouse
+3. KrauU.sdc — Krauser Lab
+4. ZiopD.sdc — Zioplex
