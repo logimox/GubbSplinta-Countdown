@@ -241,7 +241,7 @@
       els.hours.textContent = String(Math.floor((totalSeconds % 86400) / 3600)).padStart(2, '0');
       els.minutes.textContent = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
       els.seconds.textContent = String(totalSeconds % 60).padStart(2, '0');
-      heroTitle.textContent = currentConfig.title || 'GUBBSPLINTA, Tema av Bjevstavs AI';
+      heroTitle.textContent = currentConfig.title || 'GUBBSPLINTA';
       targetText.textContent = 'NÄSTA INSATS: ' + formatTarget(next);
       footLine.textContent = 'ORDINARIE: VARJE ' + weekdayNames[currentConfig.weekday] + ' ' + currentConfig.time + ' · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX';
     }

@@ -1,11 +1,31 @@
 # Format: filnamn|visningsnamn
-MounU.sdc|Test1
-MuseE.sdc|Test2
-OffsD.sdc|Test3
-OrphS.sdc|Test4
-PanaS.sdc|Test5
-PolaP.sdc|Test6
-RiveI.sdc|Test7
-Sance.sdc|Test8
-ScheU.sdc|Test9
-ShadP.sdc|Test0
+AquaE.sdc|Aqua
+BankP.sdc|Panama Bank
+CineU.sdc|Cinema
+CpusS.sdc|Cpuss
+DeftS.sdc|Deftech Belew
+Entry.sdc|Entry
+FactP.sdc|Factory
+GhostS.sdc|Ghost
+KrauU.sdc|Krauser Lab
+Lobby.sdc|Lobby
+Mise.sdc|Missile
+MounU.sdc|Mount Hospital
+MuseE.sdc|Museum
+OffsD.sdc|Offshore Oilrig
+OrphS.sdc|Orphanage
+PanaS.sdc|Panama
+PolaP.sdc|Polar Base
+RiveI.sdc|Riverside
+Sance.sdc|Sanctuary
+ScheU.sdc|Schermerhorn
+ShadP.sdc|Shadow Moses
+SkysD.sdc|SpyScraper
+SlauS.sdc|Slaughter House
+StatP.sdc|State Union
+SteeP.sdc|Steel Squat
+StroD.sdc|Stockhouse
+TermD.sdc|Terminal
+VertL.sdc|Vertigo
+WareP.sdc|Warehouse
+ZiopD.sdc|Zioplex
