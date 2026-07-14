@@ -1,0 +1,11 @@
+# Format: filnamn|visningsnamn
+MounU.sdc|Test1
+MuseE.sdc|Test2
+OffsD.sdc|Test3
+OrphS.sdc|Test4
+PanaS.sdc|Test5
+PolaP.sdc|Test6
+RiveI.sdc|Test7
+Sance.sdc|Test8
+ScheU.sdc|Test9
+ShadP.sdc|Test0

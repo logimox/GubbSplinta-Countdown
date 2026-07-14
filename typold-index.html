@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GubbSplinta Matchoff</title>
-  <meta name="description" content="Repeterande nedräkning i taktisk neonstil.">
+  <meta name="description" content="Repeterande nedräkning. Tema av Bjevstavs">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -161,7 +161,7 @@
       <p class="tiny" id="copyStatus"></p>
     </section>
 
-    <div class="footline" id="footLine">ORDINARIE: VARJE TISDAG 20:30 · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX</div>
+    <div class="footline" id="footLine">ORDINARIE: VARJE TISDAG 20:30 · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX, Tema av Olofs AI</div>
   </main>
 
   <script>
@@ -176,7 +176,7 @@
     const heroTitle = document.getElementById('heroTitle');
     const footLine = document.getElementById('footLine');
     const els = { days: document.getElementById('days'), hours: document.getElementById('hours'), minutes: document.getElementById('minutes'), seconds: document.getElementById('seconds') };
-    const defaultMaps = [
+    const maps = [
       { file: 'AquaE.sdc', full: 'Aqua' },
       { file: 'BankP.sdc', full: 'Panama Bank' },
       { file: 'CineU.sdc', full: 'Cinema' },
@@ -208,7 +208,6 @@
       { file: 'WareP.sdc', full: 'Warehouse' },
       { file: 'ZiopD.sdc', full: 'Zioplex' }
     ];
-    let maps = [...defaultMaps];
     let currentMapPick = [];
     let currentConfig = { title: 'GUBBSPLINTA', weekday: 2, time: '20:30' };
 
@@ -241,7 +240,7 @@
       els.hours.textContent = String(Math.floor((totalSeconds % 86400) / 3600)).padStart(2, '0');
       els.minutes.textContent = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
       els.seconds.textContent = String(totalSeconds % 60).padStart(2, '0');
-      heroTitle.textContent = currentConfig.title || 'GUBBSPLINTA, Tema av Bjevstavs AI';
+      heroTitle.textContent = currentConfig.title || 'GUBBSPLINTA';
       targetText.textContent = 'NÄSTA INSATS: ' + formatTarget(next);
       footLine.textContent = 'ORDINARIE: VARJE ' + weekdayNames[currentConfig.weekday] + ' ' + currentConfig.time + ' · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX';
     }
@@ -255,45 +254,12 @@
       return copy;
     }
 
-    function parseMapLine(line) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) return null;
-      const parts = trimmed.split('|').map(part => part.trim()).filter(Boolean);
-      if (parts.length === 0) return null;
-      if (parts.length === 1) return { file: parts[0], full: parts[0].replace(/\.[^.]+$/, '') };
-      return { file: parts[0], full: parts.slice(1).join(' | ') };
-    }
-
-    async function loadMapsFromTextFile() {
-      try {
-        const response = await fetch('./banor.txt', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Kunde inte läsa banor.txt');
-        const content = await response.text();
-        const parsedMaps = content.split(/\r?\n/).map(parseMapLine).filter(Boolean);
-        if (parsedMaps.length >= 4) {
-          maps = parsedMaps;
-          copyStatus.textContent = 'BANOR LÄSTA FRÅN BANOR.TXT.';
-          return;
-        }
-        copyStatus.textContent = 'BANOR.TXT HAR FÖR FÅ RADER, STANDARDLISTA ANVÄNDS.';
-      } catch {
-        copyStatus.textContent = 'BANOR.TXT HITTADES INTE, STANDARDLISTA ANVÄNDS.';
-      }
-      maps = [...defaultMaps];
-    }
-
     function renderMaps() {
       const alwaysLastPool = maps.filter(map => ['SteeP.sdc', 'ZiopD.sdc'].includes(map.file));
-      if (maps.length < 4) {
-        currentMapPick = shuffle(maps).slice(0, Math.min(4, maps.length));
-      } else if (alwaysLastPool.length) {
-        const forcedLast = shuffle(alwaysLastPool)[0];
-        const regularPool = maps.filter(map => map.file !== forcedLast.file);
-        currentMapPick = shuffle(regularPool).slice(0, 3);
-        currentMapPick.push(forcedLast);
-      } else {
-        currentMapPick = shuffle(maps).slice(0, 4);
-      }
+      const forcedLast = shuffle(alwaysLastPool)[0];
+      const regularPool = maps.filter(map => map.file !== forcedLast.file);
+      currentMapPick = shuffle(regularPool).slice(0, 3);
+      currentMapPick.push(forcedLast);
       mapList.innerHTML = currentMapPick.map((map, index) => `
         <div class="map-item">
           <div class="folder">${index + 1}. ${map.file}</div>
@@ -383,7 +349,7 @@
     document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
 
     updateCountdown();
-    loadMapsFromTextFile().then(renderMaps);
+    renderMaps();
     setInterval(updateCountdown, 1000);
   </script>
 </body>
