@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GubbSplinta Matchoff</title>
-  <meta name="description" content="Repeterande nedräkning med regnig Splinter Cell-känsla.">
+  <meta name="description" content="Repeterande nedräkning med regnig Splinter Cell-känsla och Discord-postning.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -34,13 +34,17 @@
         <div class="box"><span class="num" id="seconds">00</span><span class="label">SEKUNDER</span></div>
       </div>
       <div class="status"><span id="targetText">NÄSTA INSATS: --</span><span class="cursor"></span></div>
+      <div class="countdown-note" id="countdownNote">KVAR TILL SPEL: --</div>
     </section>
 
     <section class="panel actions">
-      <button class="btn primary" type="button" id="downloadCal">⬇ LADDA NER KALENDER (.CAL)</button>
       <div class="two">
-        <button class="btn" type="button" id="randomizeMaps">⚙ SLUMPA MAPPAR</button>
+        <button class="btn primary" type="button" id="randomizeMaps">⚙ SLUMPA MAPPAR</button>
+        <button class="btn discord" type="button" id="postDiscord">✈ POSTA TILL DISCORD</button>
+      </div>
+      <div class="two secondary-actions">
         <button class="btn" type="button" id="copyMapNames">⎘ KOPIERA FILNAMN</button>
+        <button class="btn" type="button" id="downloadCal">⬇ LADDA NER KALENDER (.CAL)</button>
       </div>
     </section>
 
@@ -50,6 +54,10 @@
         <div>
           <label for="title">Rubrik</label>
           <input class="input" id="title" type="text" value="GUBBSPLINTA">
+        </div>
+        <div>
+          <label for="workerUrl">Discord Worker-URL</label>
+          <input class="input" id="workerUrl" type="url" value="https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/post-maps" placeholder="https://din-worker.workers.dev/post-maps">
         </div>
         <div class="two">
           <div>
@@ -77,7 +85,7 @@
     </section>
 
     <section class="panel maps">
-      <h2>Aktiva mappar</h2>
+      <h2>Aktivt förslag</h2>
       <div class="map-list" id="mapList"></div>
       <p class="tiny" id="copyStatus"></p>
     </section>
@@ -91,11 +99,14 @@
     const titleInput = document.getElementById('title');
     const weekdayInput = document.getElementById('weekday');
     const timeInput = document.getElementById('timeText');
+    const workerUrlInput = document.getElementById('workerUrl');
     const targetText = document.getElementById('targetText');
+    const countdownNote = document.getElementById('countdownNote');
     const copyStatus = document.getElementById('copyStatus');
     const mapList = document.getElementById('mapList');
     const heroTitle = document.getElementById('heroTitle');
     const footLine = document.getElementById('footLine');
+    const postDiscordBtn = document.getElementById('postDiscord');
     const els = { days: document.getElementById('days'), hours: document.getElementById('hours'), minutes: document.getElementById('minutes'), seconds: document.getElementById('seconds') };
     const defaultMaps = [
       { file: 'AquaE.sdc', full: 'Aqua' },
@@ -152,6 +163,13 @@
       const timePart = new Intl.DateTimeFormat('sv-SE', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
       return `${weekday} ${datePart} KL ${timePart}`;
     }
+    function formatRemaining(totalSeconds) {
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return `${days} d, ${hours} h, ${minutes} min, ${seconds} sek`;
+    }
     function updateCountdown() {
       const next = getNextOccurrence(currentConfig.weekday, currentConfig.time);
       const totalSeconds = Math.max(0, Math.floor((next - new Date()) / 1000));
@@ -161,6 +179,7 @@
       els.seconds.textContent = String(totalSeconds % 60).padStart(2, '0');
       heroTitle.textContent = currentConfig.title || 'GUBBSPLINTA';
       targetText.textContent = 'NÄSTA INSATS: ' + formatTarget(next);
+      countdownNote.textContent = 'KVAR TILL SPEL: ' + formatRemaining(totalSeconds);
       footLine.textContent = 'ORDINARIE: VARJE ' + weekdayNames[currentConfig.weekday] + ' ' + currentConfig.time + ' · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX';
     }
     function shuffle(array) {
@@ -214,7 +233,7 @@
           <div class="map-name">${map.full}</div>
         </div>
       `).join('');
-      copyStatus.textContent = 'MAPPOOL UPPDATERAD.';
+      copyStatus.textContent = 'NYTT FÖRSLAG FRAMTAGET.';
     }
     async function copyMapNames() {
       const text = currentMapPick.map(m => m.file).join('\n');
@@ -245,7 +264,7 @@
       const now = new Date();
       const start = new Date(now.getTime() + 30 * 60 * 1000);
       const end = new Date(start.getTime() + 60 * 60 * 1000);
-      const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GubbSplinta Matchoff//Rain Theme//SV','CALSCALE:GREGORIAN'];
+      const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GubbSplinta Matchoff//Discord Ready//SV','CALSCALE:GREGORIAN'];
       currentMapPick.forEach((map, index) => {
         lines.push('BEGIN:VEVENT');
         lines.push('UID:gubbsplinta-' + now.getTime() + '-' + index + '@local');
@@ -268,6 +287,44 @@
       URL.revokeObjectURL(url);
       copyStatus.textContent = 'KALENDERFIL SKAPAD.';
     }
+    async function postMapsToDiscord() {
+      if (!currentMapPick.length) {
+        copyStatus.textContent = 'SLUMPA MAPPAR FÖRST.';
+        return;
+      }
+      const workerUrl = workerUrlInput.value.trim();
+      if (!workerUrl) {
+        copyStatus.textContent = 'ANGE DIN WORKER-URL.';
+        workerUrlInput.focus();
+        return;
+      }
+      const next = getNextOccurrence(currentConfig.weekday, currentConfig.time);
+      const totalSeconds = Math.max(0, Math.floor((next - new Date()) / 1000));
+      const payload = {
+        title: currentConfig.title || 'GubbSplinta Matchoff',
+        weekday: weekdayNames[currentConfig.weekday],
+        time: currentConfig.time,
+        targetDate: formatTarget(next),
+        remaining: formatRemaining(totalSeconds),
+        maps: currentMapPick
+      };
+      postDiscordBtn.disabled = true;
+      copyStatus.textContent = 'POSTAR TILL DISCORD...';
+      try {
+        const response = await fetch(workerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || 'Postning misslyckades');
+        copyStatus.textContent = 'DISCORD-POST SKICKAD.';
+      } catch (error) {
+        copyStatus.textContent = 'FEL VID DISCORD-POST: ' + error.message;
+      } finally {
+        postDiscordBtn.disabled = false;
+      }
+    }
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       const timeValue = timeInput.value.trim();
@@ -289,6 +346,7 @@
     document.getElementById('randomizeMaps').addEventListener('click', renderMaps);
     document.getElementById('copyMapNames').addEventListener('click', copyMapNames);
     document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
+    postDiscordBtn.addEventListener('click', postMapsToDiscord);
     updateCountdown();
     loadMapsFromTextFile().then(renderMaps);
     setInterval(updateCountdown, 1000);
