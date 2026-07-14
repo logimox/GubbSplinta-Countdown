@@ -4,103 +4,41 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GubbSplinta Matchoff</title>
-  <meta name="description" content="Repeterande nedräkning i taktisk neonstil.">
+  <meta name="description" content="Repeterande nedräkning i taktisk neonstil med externa banor.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg:#030603;
-      --surface:#071008;
-      --surface-2:#09140b;
-      --grid:#112515;
-      --border:#3d7a34;
-      --text:#b8f59b;
-      --text-strong:#8df777;
-      --text-muted:#79a86c;
-      --accent:#88e67b;
-      --accent-2:#63e46d;
-      --glow:rgba(132,240,117,.45);
-      --glow-soft:rgba(132,240,117,.18);
-      --radius:18px;
-      --space:16px;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:#000;color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100%}
-    body{
-      min-height:100vh;
-      background:
-        radial-gradient(circle at 50% 18%, rgba(136,230,123,.17), transparent 18%),
-        radial-gradient(circle at 50% 38%, rgba(136,230,123,.07), transparent 28%),
-        repeating-linear-gradient(to bottom, rgba(120,255,120,.06) 0 1px, transparent 1px 4px),
-        linear-gradient(180deg, #020302 0%, #030603 35%, #020302 100%);
-      letter-spacing:.06em;
-    }
-    body::before{
-      content:"";
-      position:fixed; inset:0;
-      pointer-events:none;
-      background:
-        linear-gradient(to right, transparent 0 9%, rgba(80,255,120,.02) 10%, transparent 11% 19%, rgba(80,255,120,.02) 20%, transparent 21% 29%, rgba(80,255,120,.02) 30%, transparent 31% 39%, rgba(80,255,120,.02) 40%, transparent 41% 49%, rgba(80,255,120,.02) 50%, transparent 51% 59%, rgba(80,255,120,.02) 60%, transparent 61% 69%, rgba(80,255,120,.02) 70%, transparent 71% 79%, rgba(80,255,120,.02) 80%, transparent 81% 89%, rgba(80,255,120,.02) 90%, transparent 91%),
-        radial-gradient(circle at center, transparent 60%, rgba(0,0,0,.25));
-      mix-blend-mode:screen;
-    }
-    .wrap{max-width:860px;margin:0 auto;padding:24px 18px 40px}
-    .panel{
-      border:1px solid rgba(136,230,123,.34);
-      background:linear-gradient(180deg, rgba(5,12,6,.92), rgba(4,8,4,.92));
-      box-shadow:0 0 0 1px rgba(136,230,123,.08) inset, 0 0 28px rgba(110,255,140,.08), 0 0 60px rgba(110,255,140,.05);
-      border-radius:var(--radius);
-      backdrop-filter:blur(1px);
-    }
-    .hero{padding:34px 20px 26px;text-align:center;position:relative;overflow:hidden}
-    .hero::after{
-      content:"";position:absolute;left:6%;right:6%;top:42%;height:76px;
-      background:radial-gradient(circle, rgba(136,230,123,.28), rgba(136,230,123,.08) 50%, transparent 72%);
-      filter:blur(14px);
-      pointer-events:none;
-    }
-    .dots{display:flex;justify-content:center;gap:22px;margin-bottom:24px}
-    .dot{width:22px;height:22px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--glow),0 0 34px var(--glow)}
-    .dot:nth-child(2){width:28px;height:28px}
-    .kicker,.subline,.footline,label,.folder,.tiny{color:var(--text-muted);text-transform:uppercase}
-    .kicker{font-size:12px;letter-spacing:.45em;margin-bottom:10px}
-    h1{font:800 clamp(2.5rem,8vw,5.4rem)/.92 'Orbitron',sans-serif;margin:0;color:var(--accent);text-transform:uppercase;text-shadow:0 0 16px rgba(136,230,123,.6),0 0 42px rgba(136,230,123,.24)}
-    .subline{font-size:15px;letter-spacing:.38em;margin-top:10px}
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
-    .box{padding:20px 10px;border-radius:14px;border:1px solid rgba(136,230,123,.3);background:linear-gradient(180deg, rgba(7,16,8,.92), rgba(4,10,5,.94));text-align:center;box-shadow:0 0 26px rgba(132,240,117,.08) inset,0 0 24px rgba(132,240,117,.07)}
-    .num{display:block;font:500 clamp(2.2rem,6.5vw,4rem)/1 'Share Tech Mono',monospace;color:#d4ffbf;text-shadow:0 0 10px rgba(136,230,123,.35)}
-    .label{display:block;margin-top:8px;font-size:12px;letter-spacing:.42em;color:var(--text-muted);text-transform:uppercase}
-    .status{margin-top:24px;padding:18px 16px;border-top:1px solid rgba(136,230,123,.22);border-bottom:1px solid rgba(136,230,123,.22);font-size:clamp(1rem,2.8vw,1.5rem);line-height:1.35;text-transform:uppercase;color:#d5ffc2;text-shadow:0 0 8px rgba(136,230,123,.15)}
-    .status .cursor{display:inline-block;width:12px;height:1.2em;background:var(--accent);vertical-align:middle;box-shadow:0 0 12px rgba(136,230,123,.6);animation:blink 1.1s steps(1) infinite;margin-left:8px}
-    @keyframes blink{50%{opacity:0}}
-    .actions,.settings,.maps{margin-top:22px;padding:18px}
-    .actions{display:grid;gap:14px}
-    .btn,.input,.select{width:100%;border-radius:10px;border:1px solid rgba(136,230,123,.32);font:500 1rem 'Share Tech Mono',monospace;letter-spacing:.18em;text-transform:uppercase}
-    .btn{padding:18px 16px;background:transparent;color:var(--accent);cursor:pointer;box-shadow:0 0 0 1px rgba(136,230,123,.06) inset,0 0 18px rgba(136,230,123,.06)}
-    .btn.primary{background:linear-gradient(180deg, #8ce183, #82dc79);color:#0b1608;border-color:#a9f39d;box-shadow:0 0 24px rgba(136,230,123,.24)}
-    .btn:hover{filter:brightness(1.08)}
-    .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .settings h2,.maps h2{font:700 1rem 'Orbitron',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--text-strong);margin:0 0 16px}
-    .settings-grid{display:grid;gap:14px}
-    .input,.select{padding:15px 14px;background:#030703;color:#d7ffc5}
-    .map-list{display:grid;gap:12px}
-    .map-item{padding:14px;border-radius:12px;border:1px solid rgba(136,230,123,.22);background:rgba(7,16,8,.85)}
-    .map-name{font-size:1.1rem;color:#d7ffc5}
-    .footline{margin-top:24px;padding:0 4px;font-size:13px;letter-spacing:.28em;line-height:1.7}
-    @media (max-width:700px){
-      .grid{grid-template-columns:repeat(2,1fr)}
-      .two{grid-template-columns:1fr}
-      .wrap{padding:16px 12px 28px}
-      .hero{padding:28px 14px 22px}
-      .subline,.kicker,.footline,.label{letter-spacing:.28em}
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="wrap">
     <section class="panel hero">
       <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <svg class="goggles" viewBox="0 0 420 140" aria-labelledby="goggleTitle" role="img">
+        <title id="goggleTitle">Taktiska gröna goggles</title>
+        <defs>
+          <filter id="goggleGlow">
+            <feGaussianBlur stdDeviation="7" result="blur"></feGaussianBlur>
+            <feMerge>
+              <feMergeNode in="blur"></feMergeNode>
+              <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+          </filter>
+          <linearGradient id="goggleBand" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stop-color="#0b1608"></stop>
+            <stop offset="40%" stop-color="#1a3b19"></stop>
+            <stop offset="60%" stop-color="#112515"></stop>
+            <stop offset="100%" stop-color="#0b1608"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="40" y="60" width="340" height="46" rx="22" ry="22" fill="url(#goggleBand)" stroke="#63e46d" stroke-width="3" opacity="0.9"></rect>
+        <rect x="54" y="68" width="312" height="30" rx="18" ry="18" fill="#060c06" stroke="#3d7a34" stroke-width="2" opacity="0.9"></rect>
+        <circle cx="120" cy="80" r="16" fill="#8df777" filter="url(#goggleGlow)"></circle>
+        <circle cx="210" cy="74" r="22" fill="#8df777" filter="url(#goggleGlow)"></circle>
+        <circle cx="300" cy="80" r="16" fill="#8df777" filter="url(#goggleGlow)"></circle>
+        <path d="M70 95 Q210 40 350 95" fill="none" stroke="#79a86c" stroke-width="3" opacity="0.85"></path>
+        <path d="M90 104 Q210 55 330 104" fill="none" stroke="#8df777" stroke-width="2" opacity="0.75"></path>
+      </svg>
       <div class="kicker">// UPPDRAG: SPELKVÄLL //</div>
       <h1 id="heroTitle">GUBBSPLINTA</h1>
       <div class="subline">SPLINTER CELL: CHAOS THEORY</div>
@@ -378,6 +316,7 @@
       titleInput.value = 'GUBBSPLINTA';
       form.requestSubmit();
     });
+
     document.getElementById('randomizeMaps').addEventListener('click', renderMaps);
     document.getElementById('copyMapNames').addEventListener('click', copyMapNames);
     document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
