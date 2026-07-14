@@ -4,52 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GubbSplinta Matchoff</title>
-  <meta name="description" content="Repeterande nedräkning i taktisk neonstil med externa banor.">
+  <meta name="description" content="Repeterande nedräkning med regnig Splinter Cell-känsla.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="rain-layer" aria-hidden="true"></div>
   <main class="wrap">
-    <section class="panel hero">
-      <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-      <svg class="goggles" viewBox="0 0 420 140" aria-labelledby="goggleTitle" role="img">
-        <title id="goggleTitle">Taktiska gröna goggles</title>
-        <defs>
-          <filter id="goggleGlow">
-            <feGaussianBlur stdDeviation="7" result="blur"></feGaussianBlur>
-            <feMerge>
-              <feMergeNode in="blur"></feMergeNode>
-              <feMergeNode in="SourceGraphic"></feMergeNode>
-            </feMerge>
-          </filter>
-          <linearGradient id="goggleBand" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stop-color="#0b1608"></stop>
-            <stop offset="40%" stop-color="#1a3b19"></stop>
-            <stop offset="60%" stop-color="#112515"></stop>
-            <stop offset="100%" stop-color="#0b1608"></stop>
-          </linearGradient>
-        </defs>
-        <rect x="40" y="60" width="340" height="46" rx="22" ry="22" fill="url(#goggleBand)" stroke="#63e46d" stroke-width="3" opacity="0.9"></rect>
-        <rect x="54" y="68" width="312" height="30" rx="18" ry="18" fill="#060c06" stroke="#3d7a34" stroke-width="2" opacity="0.9"></rect>
-        <circle cx="120" cy="80" r="16" fill="#8df777" filter="url(#goggleGlow)"></circle>
-        <circle cx="210" cy="74" r="22" fill="#8df777" filter="url(#goggleGlow)"></circle>
-        <circle cx="300" cy="80" r="16" fill="#8df777" filter="url(#goggleGlow)"></circle>
-        <path d="M70 95 Q210 40 350 95" fill="none" stroke="#79a86c" stroke-width="3" opacity="0.85"></path>
-        <path d="M90 104 Q210 55 330 104" fill="none" stroke="#8df777" stroke-width="2" opacity="0.75"></path>
-      </svg>
-      <div class="kicker">// UPPDRAG: SPELKVÄLL //</div>
+    <section class="hero panel">
+      <div class="lens-scene" aria-hidden="true">
+        <div class="blood-drop"></div>
+        <div class="lens top"></div>
+        <div class="lens left"></div>
+        <div class="lens right"></div>
+        <div class="mist"></div>
+      </div>
+      <p class="eyebrow">// OPERATION: GUBBSPLINTA //</p>
       <h1 id="heroTitle">GUBBSPLINTA</h1>
-      <div class="subline">SPLINTER CELL: CHAOS THEORY</div>
+      <p class="subline">TACTICAL COUNTDOWN PROTOCOL</p>
+    </section>
 
+    <section class="panel countdown-panel">
       <div class="grid">
         <div class="box"><span class="num" id="days">00</span><span class="label">DAGAR</span></div>
         <div class="box"><span class="num" id="hours">00</span><span class="label">TIMMAR</span></div>
         <div class="box"><span class="num" id="minutes">00</span><span class="label">MINUTER</span></div>
         <div class="box"><span class="num" id="seconds">00</span><span class="label">SEKUNDER</span></div>
       </div>
-
       <div class="status"><span id="targetText">NÄSTA INSATS: --</span><span class="cursor"></span></div>
     </section>
 
@@ -153,7 +136,6 @@
     function validTime(value) {
       return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(value);
     }
-
     function getNextOccurrence(targetWeekday, timeValue) {
       const now = new Date();
       const [hours, minutes] = timeValue.split(':').map(Number);
@@ -164,14 +146,12 @@
       target.setDate(now.getDate() + diffDays);
       return target;
     }
-
     function formatTarget(date) {
       const weekday = new Intl.DateTimeFormat('sv-SE', { weekday: 'long' }).format(date).toUpperCase();
       const datePart = new Intl.DateTimeFormat('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' }).format(date).toUpperCase();
       const timePart = new Intl.DateTimeFormat('sv-SE', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
       return `${weekday} ${datePart} KL ${timePart}`;
     }
-
     function updateCountdown() {
       const next = getNextOccurrence(currentConfig.weekday, currentConfig.time);
       const totalSeconds = Math.max(0, Math.floor((next - new Date()) / 1000));
@@ -183,7 +163,6 @@
       targetText.textContent = 'NÄSTA INSATS: ' + formatTarget(next);
       footLine.textContent = 'ORDINARIE: VARJE ' + weekdayNames[currentConfig.weekday] + ' ' + currentConfig.time + ' · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX';
     }
-
     function shuffle(array) {
       const copy = [...array];
       for (let i = copy.length - 1; i > 0; i--) {
@@ -192,7 +171,6 @@
       }
       return copy;
     }
-
     function parseMapLine(line) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) return null;
@@ -201,7 +179,6 @@
       if (parts.length === 1) return { file: parts[0], full: parts[0].replace(/\.[^.]+$/, '') };
       return { file: parts[0], full: parts.slice(1).join(' | ') };
     }
-
     async function loadMapsFromTextFile() {
       try {
         const response = await fetch('./banor.txt', { cache: 'no-store' });
@@ -219,7 +196,6 @@
       }
       maps = [...defaultMaps];
     }
-
     function renderMaps() {
       const alwaysLastPool = maps.filter(map => ['SteeP.sdc', 'ZiopD.sdc'].includes(map.file));
       if (maps.length < 4) {
@@ -240,7 +216,6 @@
       `).join('');
       copyStatus.textContent = 'MAPPOOL UPPDATERAD.';
     }
-
     async function copyMapNames() {
       const text = currentMapPick.map(m => m.file).join('\n');
       try {
@@ -255,16 +230,13 @@
       }
       copyStatus.textContent = 'FILNAMN KOPIERADE.';
     }
-
     function escapeCal(value) {
       return String(value).replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
     }
-
     function formatCalUTC(date) {
       const pad = n => String(n).padStart(2, '0');
       return date.getUTCFullYear() + pad(date.getUTCMonth() + 1) + pad(date.getUTCDate()) + 'T' + pad(date.getUTCHours()) + pad(date.getUTCMinutes()) + pad(date.getUTCSeconds()) + 'Z';
     }
-
     function downloadCalForMaps() {
       if (!currentMapPick.length) {
         copyStatus.textContent = 'SLUMPA MAPPAR FÖRST.';
@@ -273,7 +245,7 @@
       const now = new Date();
       const start = new Date(now.getTime() + 30 * 60 * 1000);
       const end = new Date(start.getTime() + 60 * 60 * 1000);
-      const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GubbSplinta Matchoff//Chaos Theory//SV','CALSCALE:GREGORIAN'];
+      const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//GubbSplinta Matchoff//Rain Theme//SV','CALSCALE:GREGORIAN'];
       currentMapPick.forEach((map, index) => {
         lines.push('BEGIN:VEVENT');
         lines.push('UID:gubbsplinta-' + now.getTime() + '-' + index + '@local');
@@ -296,7 +268,6 @@
       URL.revokeObjectURL(url);
       copyStatus.textContent = 'KALENDERFIL SKAPAD.';
     }
-
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       const timeValue = timeInput.value.trim();
@@ -309,18 +280,15 @@
       updateCountdown();
       copyStatus.textContent = 'TID OCH RUBRIK UPPDATERAD.';
     });
-
     document.getElementById('presetTuesday').addEventListener('click', () => {
       weekdayInput.value = '2';
       timeInput.value = '20:30';
       titleInput.value = 'GUBBSPLINTA';
       form.requestSubmit();
     });
-
     document.getElementById('randomizeMaps').addEventListener('click', renderMaps);
     document.getElementById('copyMapNames').addEventListener('click', copyMapNames);
     document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
-
     updateCountdown();
     loadMapsFromTextFile().then(renderMaps);
     setInterval(updateCountdown, 1000);
