@@ -79,6 +79,7 @@
     <section class="panel maps">
       <h2>Aktivt förslag</h2>
       <div class="map-list" id="mapList"></div>
+      <p class="tiny">Du kan slumpa flera gånger och sedan finjustera varje rad via dropdown.</p>
       <p class="tiny" id="copyStatus"></p>
     </section>
 
@@ -216,13 +217,45 @@
       } else {
         currentMapPick = shuffle(maps).slice(0, 4);
       }
-      mapList.innerHTML = currentMapPick.map((map, index) => `
+      mapList.innerHTML = currentMapPick.map((map, index) => {
+        const options = maps.map(option => `<option value="${option.file}" ${option.file === map.file ? 'selected' : ''}>${option.file} — ${option.full}</option>`).join('');
+        return `
         <div class="map-item">
           <div class="folder">${index + 1}. ${map.file}</div>
           <div class="map-name">${map.full}</div>
+          <label for="map-select-${index}">Byt bana</label>
+          <select class="select map-select" id="map-select-${index}" data-index="${index}">${options}</select>
         </div>
-      `).join('');
+      `;
+      }).join('');
+      bindMapSelects();
       copyStatus.textContent = 'NYTT FÖRSLAG FRAMTAGET.';
+    }
+    function bindMapSelects() {
+      document.querySelectorAll('.map-select').forEach(select => {
+        select.addEventListener('change', event => {
+          const index = Number(event.target.dataset.index);
+          const selected = maps.find(map => map.file === event.target.value);
+          if (!selected) return;
+          currentMapPick[index] = { ...selected };
+          renderCurrentSelection();
+          copyStatus.textContent = 'FÖRSLAGET HAR FINJUSTERATS.';
+        });
+      });
+    }
+    function renderCurrentSelection() {
+      mapList.innerHTML = currentMapPick.map((map, index) => {
+        const options = maps.map(option => `<option value="${option.file}" ${option.file === map.file ? 'selected' : ''}>${option.file} — ${option.full}</option>`).join('');
+        return `
+        <div class="map-item">
+          <div class="folder">${index + 1}. ${map.file}</div>
+          <div class="map-name">${map.full}</div>
+          <label for="map-select-${index}">Byt bana</label>
+          <select class="select map-select" id="map-select-${index}" data-index="${index}">${options}</select>
+        </div>
+      `;
+      }).join('');
+      bindMapSelects();
     }
     async function copyMapNames() {
       const text = currentMapPick.map(m => m.file).join('\n');
