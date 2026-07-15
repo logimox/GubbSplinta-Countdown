@@ -1,11 +1,11 @@
 GubbSplinta Matchoff
-Uppdaterad: 2026-07-14T22:11:47.688Z
+Uppdaterad: 2026-07-15T13:31:38.947Z
 Spel: TISDAG 20:30
 Nästa tillfälle: TISDAG 21 JULI 2026 KL 20:30
-Tid kvar: 6 d, 20 h, 18 min, 12 sek
+Tid kvar: 6 d, 4 h, 58 min, 21 sek
 
 Aktuellt kartförslag:
-1. ZiopD.sdc — Zioplex
-2. BankP.sdc — Panama Bank
-3. SlauS.sdc — Slaughter House
+1. AquaE.sdc — Aqua
+2. CineU.sdc — Cinema
+3. Mise.sdc — Missile
 4. SteeP.sdc — Steel Squat
