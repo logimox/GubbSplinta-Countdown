@@ -1,11 +1,11 @@
 GubbSplinta Matchoff
-Uppdaterad: 2026-07-15T13:31:38.947Z
+Uppdaterad: 2026-07-15T23:04:10.284Z
 Spel: TISDAG 20:30
 Nästa tillfälle: TISDAG 21 JULI 2026 KL 20:30
-Tid kvar: 6 d, 4 h, 58 min, 21 sek
+Tid kvar: 5 d, 19 h, 25 min, 50 sek
 
 Aktuellt kartförslag:
 1. AquaE.sdc — Aqua
-2. CineU.sdc — Cinema
-3. Mise.sdc — Missile
+2. TermD.sdc — Terminal
+3. PolaP.sdc — Polar Base
 4. SteeP.sdc — Steel Squat
