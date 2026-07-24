@@ -1,0 +1,10 @@
+name = "gubbsplinta-discord-proxy"
+main = "worker.js"
+compatibility_date = "2026-07-14"
+
+[vars]
+GITHUB_OWNER = "logimox"
+GITHUB_REPO = "GubbSplinta-Countdown"
+GITHUB_BRANCH = "main"
+GITHUB_FILE_PATH = "current-match.txt"
+GITHUB_MESSAGE_ID_PATH = ".gubbsplinta-last-discord-message.txt"
