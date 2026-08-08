@@ -1,0 +1,17 @@
+# Cloudflare Wrangler local state and development secrets
+.wrangler/
+.dev.vars
+.dev.vars.*
+
+# Generic local environment and credential files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Legacy local credential notes (never commit)
+webhook-CloudFlare-Wrangler.txt
+
+# OS metadata
+.DS_Store
