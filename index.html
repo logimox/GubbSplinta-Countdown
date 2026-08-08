@@ -53,6 +53,10 @@
       <p class="tiny">Standard är <strong>tillgänglig</strong>. Boka bara av den dag du inte kan — status syns här och i Discords <code>/rsvp</code>.</p>
       <div class="availability-date" id="availabilityDate">MATCHDATUM: --</div>
       <div id="availabilityList" class="availability-list" aria-live="polite">LADDAR TILLGÄNGLIGHET…</div>
+      <div class="admin-availability" id="adminAvailability" hidden>
+        <label for="availabilityPlayer">ADMIN: VÄLJ SPELARE</label>
+        <select class="select" id="availabilityPlayer"></select>
+      </div>
       <div class="two secondary-actions">
         <a class="btn discord" id="discordLogin" href="https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/auth/discord">◉ LOGGA IN MED DISCORD</a>
         <button class="btn" type="button" id="availabilityToggle" disabled>LOGGA IN FÖR ATT BOKA AV</button>
@@ -107,9 +111,12 @@
     const availabilityStatus = document.getElementById('availabilityStatus');
     const availabilityToggle = document.getElementById('availabilityToggle');
     const discordLogin = document.getElementById('discordLogin');
+    const adminAvailability = document.getElementById('adminAvailability');
+    const availabilityPlayer = document.getElementById('availabilityPlayer');
     let availabilityAuth = sessionStorage.getItem(authStorageKey) || '';
     let signedInPlayer = null;
     let availabilityData = null;
+    const logimoxId = '151053160847376384';
     const weekdayNames = ['SÖNDAG','MÅNDAG','TISDAG','ONSDAG','TORSDAG','FREDAG','LÖRDAG'];
     const form = document.getElementById('countdownForm');
     const weekdayInput = document.getElementById('weekday');
@@ -181,12 +188,22 @@
       const unavailable = (availabilityData.unavailable || []).map(player => `<span class="availability-player unavailable">❌ ${player.name}</span>`).join('');
       availabilityList.innerHTML = `<div><strong>TILLGÄNGLIGA</strong><div>${available || '—'}</div></div><div><strong>KAN INTE</strong><div>${unavailable || '—'}</div></div>`;
       if (signedInPlayer) {
-        const isUnavailable = (availabilityData.unavailable || []).some(player => player.id === signedInPlayer.id);
+        const isAdmin = signedInPlayer.id === logimoxId;
+        if (isAdmin) {
+          adminAvailability.hidden = false;
+          const selected = availabilityPlayer.value || signedInPlayer.id;
+          const players = [...(availabilityData.available || []), ...(availabilityData.unavailable || [])];
+          availabilityPlayer.innerHTML = players.map(player => `<option value="${player.id}" ${player.id === selected ? 'selected' : ''}>${player.name}</option>`).join('');
+        } else adminAvailability.hidden = true;
+        const targetId = isAdmin ? (availabilityPlayer.value || signedInPlayer.id) : signedInPlayer.id;
+        const target = [...(availabilityData.available || []), ...(availabilityData.unavailable || [])].find(player => player.id === targetId) || signedInPlayer;
+        const isUnavailable = (availabilityData.unavailable || []).some(player => player.id === target.id);
         availabilityToggle.disabled = false;
-        availabilityToggle.textContent = isUnavailable ? 'MARKERA MIG SOM TILLGÄNGLIG' : 'JAG KAN INTE DENNA DAG';
-        availabilityStatus.textContent = `INLOGGAD SOM ${signedInPlayer.name.toUpperCase()}. ${isUnavailable ? 'DIN AVBOKNING ÄR REGISTRERAD.' : 'DU RÄKNAS SOM TILLGÄNGLIG.'}`;
+        availabilityToggle.textContent = isUnavailable ? `MARKERA ${target.name.toUpperCase()} SOM TILLGÄNGLIG` : `${target.name.toUpperCase()} KAN INTE DENNA DAG`;
+        availabilityStatus.textContent = isAdmin ? 'ADMINLÄGE: DU KAN ÄNDRA ALLAS TILLGÄNGLIGHET.' : `INLOGGAD SOM ${signedInPlayer.name.toUpperCase()}. ${isUnavailable ? 'DIN AVBOKNING ÄR REGISTRERAD.' : 'DU RÄKNAS SOM TILLGÄNGLIG.'}`;
         discordLogin.textContent = `◉ INLOGGAD: ${signedInPlayer.name.toUpperCase()}`;
       } else {
+        adminAvailability.hidden = true;
         availabilityToggle.disabled = true;
         availabilityToggle.textContent = 'LOGGA IN FÖR ATT BOKA AV';
         availabilityStatus.textContent = 'LOGGA IN MED DISCORD ELLER ÖPPNA DIN PRIVATA SNABB-LÄNK FÖR ATT ÄNDRA DIN EGEN STATUS.';
@@ -210,11 +227,12 @@
     }
     async function toggleAvailability() {
       if (!signedInPlayer || !availabilityData) return;
-      const unavailable = !(availabilityData.unavailable || []).some(player => player.id === signedInPlayer.id);
+      const targetId = signedInPlayer.id === logimoxId ? (availabilityPlayer.value || signedInPlayer.id) : signedInPlayer.id;
+      const unavailable = !(availabilityData.unavailable || []).some(player => player.id === targetId);
       availabilityToggle.disabled = true;
       try {
         const response = await fetch(`${API_URL}/availability?date=${encodeURIComponent(availabilityData.date)}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ unavailable })
+          method: 'PUT', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ unavailable, playerId: targetId })
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Uppdateringen misslyckades.');
@@ -448,6 +466,7 @@
     document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
     postDiscordBtn.addEventListener('click', postMapsToDiscord);
     availabilityToggle.addEventListener('click', toggleAvailability);
+    availabilityPlayer.addEventListener('change', renderAvailability);
     absorbAuthFromHash();
     updateCountdown();
     loadAvailability();

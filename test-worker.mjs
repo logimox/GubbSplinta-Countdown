@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { __testables } from './worker.js';
 
-const { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer } = __testables;
+const { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability } = __testables;
 
 test('buildRoleSelectorMessage creates expanded Chaos Theory and Deep Rock role panels', () => {
   const message = buildRoleSelectorMessage();
@@ -85,5 +85,15 @@ test('buildAvailabilitySummary makes explicit unavailable players visible for Di
   assert.match(summary, /✅ LogiMOX/);
   assert.match(summary, /❌ Doxos/);
   assert.match(summary, /Standard: tillgänglig/i);
+});
+
+test('only LogiMOX can manage another player availability', () => {
+  const logimox = resolvePlayer('151053160847376384');
+  const kakan = resolvePlayer('322841126476447744');
+  const doxos = resolvePlayer('284415770291732490');
+  assert.equal(canManageAvailability(logimox, doxos), true);
+  assert.equal(canManageAvailability(logimox, logimox), true);
+  assert.equal(canManageAvailability(kakan, doxos), false);
+  assert.equal(canManageAvailability(null, doxos), false);
 });
 

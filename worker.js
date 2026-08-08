@@ -120,11 +120,14 @@ async function handleAvailability(request, env, url) {
   if (!player) return json({ error: 'Logga in med Discord eller din privata snabb-länk.' }, 401);
   const body = await request.json().catch(() => ({}));
   if (typeof body.unavailable !== 'boolean') return json({ error: 'unavailable must be boolean' }, 400);
+  const target = resolvePlayer(body.playerId || player.id);
+  if (!target) return json({ error: 'Okänd spelare.' }, 400);
+  if (!canManageAvailability(player, target)) return json({ error: 'Du kan bara ändra din egen tillgänglighet.' }, 403);
   state.availability[date] ||= {};
-  if (body.unavailable) state.availability[date][player.id] = { unavailable: true, at: new Date().toISOString() };
-  else delete state.availability[date][player.id];
+  if (body.unavailable) state.availability[date][target.id] = { unavailable: true, at: new Date().toISOString(), by: player.id };
+  else delete state.availability[date][target.id];
   await writeState(env, state);
-  return new Response(JSON.stringify({ date, player, ...availabilityForDate(state, date) }), { headers: { 'Content-Type': 'application/json', ...availabilityHeaders() } });
+  return new Response(JSON.stringify({ date, player: target, actor: player, ...availabilityForDate(state, date) }), { headers: { 'Content-Type': 'application/json', ...availabilityHeaders() } });
 }
 
 async function handleDiscordInteraction(request, env) {
@@ -236,6 +239,7 @@ function normalizeMemory(value) {
 function teamLabel(key) { return key === 'kakan_logimox' ? 'Kakan + LogiMOX' : 'Bjestavs + Doxos'; }
 function normalizeMatchDate(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null; }
 function resolvePlayer(discordId) { return PLAYERS.find(player => player.id === String(discordId)) || null; }
+function canManageAvailability(actor, target) { return Boolean(actor && target && (actor.id === target.id || actor.id === '151053160847376384')); }
 function availabilityForDate(state, date) {
   const cancelled = state?.availability?.[date] || {};
   const unavailable = PLAYERS.filter(player => cancelled[player.id]?.unavailable);
@@ -394,4 +398,4 @@ function safe(value, fallback) { return typeof value === 'string' ? value.replac
 function corsHeaders() { return { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }; }
 function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders() } }); }
 
-export const __testables = { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, roleIdsFromEnv, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer };
+export const __testables = { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, roleIdsFromEnv, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability };
