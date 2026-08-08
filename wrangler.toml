@@ -8,3 +8,9 @@ GITHUB_REPO = "GubbSplinta-Countdown"
 GITHUB_BRANCH = "main"
 GITHUB_FILE_PATH = "current-match.txt"
 GITHUB_MESSAGE_ID_PATH = ".gubbsplinta-last-discord-message.txt"
+DISCORD_OAUTH_CLIENT_ID = "1534662985707163809"
+SITE_ORIGIN = "https://logimox.github.io"
+
+[[kv_namespaces]]
+binding = "GUBBSPLINTA_STATE"
+id = "7a0c431a79474571910dc302501de568"

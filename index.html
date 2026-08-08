@@ -48,6 +48,18 @@
       </div>
     </section>
 
+    <section class="panel availability">
+      <h2>Frånvaro för nästa insats</h2>
+      <p class="tiny">Standard är <strong>tillgänglig</strong>. Boka bara av den dag du inte kan — status syns här och i Discords <code>/rsvp</code>.</p>
+      <div class="availability-date" id="availabilityDate">MATCHDATUM: --</div>
+      <div id="availabilityList" class="availability-list" aria-live="polite">LADDAR TILLGÄNGLIGHET…</div>
+      <div class="two secondary-actions">
+        <a class="btn discord" id="discordLogin" href="https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/auth/discord">◉ LOGGA IN MED DISCORD</a>
+        <button class="btn" type="button" id="availabilityToggle" disabled>LOGGA IN FÖR ATT BOKA AV</button>
+      </div>
+      <p class="tiny" id="availabilityStatus">Privat snabb-länk fungerar också: öppna din personliga länk en gång för att logga in.</p>
+    </section>
+
     <section class="panel settings">
       <h2>Boka om</h2>
       <form id="countdownForm" class="settings-grid">
@@ -88,6 +100,16 @@
 
   <script>
     const WORKER_URL = 'https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/post-maps';
+    const API_URL = 'https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev';
+    const authStorageKey = 'gubbsplinta-availability-auth';
+    const availabilityList = document.getElementById('availabilityList');
+    const availabilityDate = document.getElementById('availabilityDate');
+    const availabilityStatus = document.getElementById('availabilityStatus');
+    const availabilityToggle = document.getElementById('availabilityToggle');
+    const discordLogin = document.getElementById('discordLogin');
+    let availabilityAuth = sessionStorage.getItem(authStorageKey) || '';
+    let signedInPlayer = null;
+    let availabilityData = null;
     const weekdayNames = ['SÖNDAG','MÅNDAG','TISDAG','ONSDAG','TORSDAG','FREDAG','LÖRDAG'];
     const form = document.getElementById('countdownForm');
     const weekdayInput = document.getElementById('weekday');
@@ -147,6 +169,68 @@
       if (diffDays === 0 && target <= now) diffDays = 7;
       target.setDate(now.getDate() + diffDays);
       return target;
+    }
+    function nextMatchDateKey() {
+      return getNextOccurrence(currentConfig.weekday, currentConfig.time).toISOString().slice(0, 10);
+    }
+    function authHeaders() { return availabilityAuth ? { Authorization: `Bearer ${availabilityAuth}` } : {}; }
+    function renderAvailability() {
+      if (!availabilityData) return;
+      availabilityDate.textContent = `MATCHDATUM: ${availabilityData.date}`;
+      const available = (availabilityData.available || []).map(player => `<span class="availability-player available">✅ ${player.name}</span>`).join('');
+      const unavailable = (availabilityData.unavailable || []).map(player => `<span class="availability-player unavailable">❌ ${player.name}</span>`).join('');
+      availabilityList.innerHTML = `<div><strong>TILLGÄNGLIGA</strong><div>${available || '—'}</div></div><div><strong>KAN INTE</strong><div>${unavailable || '—'}</div></div>`;
+      if (signedInPlayer) {
+        const isUnavailable = (availabilityData.unavailable || []).some(player => player.id === signedInPlayer.id);
+        availabilityToggle.disabled = false;
+        availabilityToggle.textContent = isUnavailable ? 'MARKERA MIG SOM TILLGÄNGLIG' : 'JAG KAN INTE DENNA DAG';
+        availabilityStatus.textContent = `INLOGGAD SOM ${signedInPlayer.name.toUpperCase()}. ${isUnavailable ? 'DIN AVBOKNING ÄR REGISTRERAD.' : 'DU RÄKNAS SOM TILLGÄNGLIG.'}`;
+        discordLogin.textContent = `◉ INLOGGAD: ${signedInPlayer.name.toUpperCase()}`;
+      } else {
+        availabilityToggle.disabled = true;
+        availabilityToggle.textContent = 'LOGGA IN FÖR ATT BOKA AV';
+        availabilityStatus.textContent = 'LOGGA IN MED DISCORD ELLER ÖPPNA DIN PRIVATA SNABB-LÄNK FÖR ATT ÄNDRA DIN EGEN STATUS.';
+      }
+    }
+    async function loadAvailability() {
+      const date = nextMatchDateKey();
+      try {
+        const [statusResponse, availabilityResponse] = await Promise.all([
+          fetch(`${API_URL}/auth/status`, { headers: authHeaders() }),
+          fetch(`${API_URL}/availability?date=${encodeURIComponent(date)}`, { headers: authHeaders() })
+        ]);
+        const status = await statusResponse.json();
+        if (!availabilityResponse.ok) throw new Error('Kunde inte läsa tillgänglighet.');
+        availabilityData = await availabilityResponse.json();
+        signedInPlayer = status.player;
+        renderAvailability();
+      } catch (error) {
+        availabilityList.textContent = 'KUNDE INTE LADDA TILLGÄNGLIGHET: ' + error.message;
+      }
+    }
+    async function toggleAvailability() {
+      if (!signedInPlayer || !availabilityData) return;
+      const unavailable = !(availabilityData.unavailable || []).some(player => player.id === signedInPlayer.id);
+      availabilityToggle.disabled = true;
+      try {
+        const response = await fetch(`${API_URL}/availability?date=${encodeURIComponent(availabilityData.date)}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ unavailable })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Uppdateringen misslyckades.');
+        availabilityData = result;
+        renderAvailability();
+      } catch (error) {
+        availabilityStatus.textContent = 'FEL: ' + error.message;
+        availabilityToggle.disabled = false;
+      }
+    }
+    function absorbAuthFromHash() {
+      const fragment = new URLSearchParams(location.hash.slice(1));
+      const token = fragment.get('auth');
+      const error = fragment.get('error');
+      if (token) { availabilityAuth = token; sessionStorage.setItem(authStorageKey, token); history.replaceState(null, '', location.pathname); }
+      if (error) { availabilityStatus.textContent = error.toUpperCase(); history.replaceState(null, '', location.pathname); }
     }
     function formatTarget(date) {
       const weekday = new Intl.DateTimeFormat('sv-SE', { weekday: 'long' }).format(date).toUpperCase();
@@ -351,6 +435,7 @@
       }
       currentConfig = { weekday: Number(weekdayInput.value), time: timeValue };
       updateCountdown();
+      loadAvailability();
       copyStatus.textContent = 'BOKNING UPPDATERAD.';
     });
     document.getElementById('presetTuesday').addEventListener('click', () => {
@@ -362,7 +447,10 @@
     document.getElementById('copyMapNames').addEventListener('click', copyMapNames);
     document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
     postDiscordBtn.addEventListener('click', postMapsToDiscord);
+    availabilityToggle.addEventListener('click', toggleAvailability);
+    absorbAuthFromHash();
     updateCountdown();
+    loadAvailability();
     loadMapsFromTextFile().then(renderMaps);
     setInterval(updateCountdown, 1000);
   </script>
