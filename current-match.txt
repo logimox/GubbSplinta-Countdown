@@ -1,8 +1,8 @@
 GubbSplinta Matchoff
-Uppdaterad: 2026-08-10T18:41:56.048Z
+Uppdaterad: 2026-08-10T18:41:59.931Z
 Spel: TISDAG 20:30
 Nästa tillfälle: TISDAG 11 AUGUSTI 2026 KL 20:30
-Tid kvar: 0 d, 23 h, 48 min, 4 sek
+Tid kvar: 0 d, 23 h, 48 min, 0 sek
 
 Aktuellt kartförslag:
 1. AquaE.sdc — Aqua
