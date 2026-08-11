@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { __testables } from './worker.js';
 
-const { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability } = __testables;
+const { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate } = __testables;
 
 test('buildRoleSelectorMessage creates expanded Chaos Theory and Deep Rock role panels', () => {
   const message = buildRoleSelectorMessage();
@@ -80,9 +80,21 @@ test('availability defaults every mapped player to available and only marks expl
   assert.deepEqual(availability.unavailable.map(player => player.name), ['Kakan']);
 });
 
-test('buildAvailabilitySummary makes explicit unavailable players visible for Discord and web', () => {
-  const summary = buildAvailabilitySummary({ available: [{ name: 'LogiMOX' }], unavailable: [{ name: 'Doxos' }] });
+test('dated RSVP answers drive the same availability story for Discord and web', () => {
+  const date = '2026-08-11';
+  const state = { rsvps: { [date]: {
+    '322841126476447744': { name: 'Kakan', status: 'in' },
+    '151053160847376384': { name: 'LogiMOX', status: 'late' },
+    '284415770291732490': { name: 'Doxos', status: 'out' }
+  } } };
+  assert.equal(rsvpForDate(state, date)['151053160847376384'].status, 'late');
+  const availability = availabilityForDate(state, date);
+  assert.deepEqual(availability.available.map(player => player.name), ['Kakan', 'LogiMOX', 'Bjestavs']);
+  assert.deepEqual(availability.late.map(player => player.name), ['LogiMOX']);
+  assert.deepEqual(availability.unavailable.map(player => player.name), ['Doxos']);
+  const summary = buildAvailabilitySummary(availability);
   assert.match(summary, /✅ LogiMOX/);
+  assert.match(summary, /⏱️ LogiMOX/);
   assert.match(summary, /❌ Doxos/);
   assert.match(summary, /Standard: tillgänglig/i);
 });

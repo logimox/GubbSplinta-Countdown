@@ -185,8 +185,9 @@
       if (!availabilityData) return;
       availabilityDate.textContent = `MATCHDATUM: ${availabilityData.date}`;
       const available = (availabilityData.available || []).map(player => `<span class="availability-player available">✅ ${player.name}</span>`).join('');
+      const late = (availabilityData.late || []).map(player => `<span class="availability-player late">⏱️ ${player.name}</span>`).join('');
       const unavailable = (availabilityData.unavailable || []).map(player => `<span class="availability-player unavailable">❌ ${player.name}</span>`).join('');
-      availabilityList.innerHTML = `<div><strong>TILLGÄNGLIGA</strong><div>${available || '—'}</div></div><div><strong>KAN INTE</strong><div>${unavailable || '—'}</div></div>`;
+      availabilityList.innerHTML = `<div><strong>TILLGÄNGLIGA</strong><div>${available || '—'}</div></div><div><strong>SEN</strong><div>${late || '—'}</div></div><div><strong>KAN INTE</strong><div>${unavailable || '—'}</div></div>`;
       if (signedInPlayer) {
         const isAdmin = signedInPlayer.id === logimoxId;
         if (isAdmin) {

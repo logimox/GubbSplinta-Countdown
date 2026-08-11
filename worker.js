@@ -123,11 +123,10 @@ async function handleAvailability(request, env, url) {
   const target = resolvePlayer(body.playerId || player.id);
   if (!target) return json({ error: 'Okänd spelare.' }, 400);
   if (!canManageAvailability(player, target)) return json({ error: 'Du kan bara ändra din egen tillgänglighet.' }, 403);
-  state.availability[date] ||= {};
-  if (body.unavailable) state.availability[date][target.id] = { unavailable: true, at: new Date().toISOString(), by: player.id };
-  else delete state.availability[date][target.id];
-  await writeState(env, state);
-  return new Response(JSON.stringify({ date, player: target, actor: player, ...availabilityForDate(state, date) }), { headers: { 'Content-Type': 'application/json', ...availabilityHeaders() } });
+  // The website's two choices translate into the same three RSVP words Discord uses.
+  await setRsvp(env, { id: target.id, global_name: target.name, username: target.name }, body.unavailable ? 'out' : 'in', date);
+  const latest = await readState(env);
+  return new Response(JSON.stringify({ date, player: target, actor: player, ...availabilityForDate(latest, date) }), { headers: { 'Content-Type': 'application/json', ...availabilityHeaders() } });
 }
 
 async function handleDiscordInteraction(request, env) {
@@ -156,8 +155,9 @@ async function handleDiscordInteraction(request, env) {
       const status = interaction.data.custom_id.slice(5);
       if (!['in', 'late', 'out'].includes(status)) return discordResponse(ephemeral('Okänd RSVP-signal.'));
       const user = interaction.member?.user || interaction.user;
-      await setRsvp(env, user, status);
-      return discordResponse(ephemeral(rsvpConfirmation(status)));
+      // Discord buttons and the website write to the same match-date RSVP box.
+      await setRsvp(env, user, status, nextTuesdayDate());
+      return discordResponse(ephemeral(`${rsvpConfirmation(status)} Webbpanelen uppdateras också.`));
     }
     return discordResponse(ephemeral('Den knappen verkar ha blivit komprometterad av en lampa. Prova panelen igen.'));
   }
@@ -240,15 +240,25 @@ function teamLabel(key) { return key === 'kakan_logimox' ? 'Kakan + LogiMOX' : '
 function normalizeMatchDate(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null; }
 function resolvePlayer(discordId) { return PLAYERS.find(player => player.id === String(discordId)) || null; }
 function canManageAvailability(actor, target) { return Boolean(actor && target && (actor.id === target.id || actor.id === '151053160847376384')); }
-function availabilityForDate(state, date) {
-  const cancelled = state?.availability?.[date] || {};
-  const unavailable = PLAYERS.filter(player => cancelled[player.id]?.unavailable);
-  return { available: PLAYERS.filter(player => !cancelled[player.id]?.unavailable), unavailable };
+function rsvpForDate(state, date) {
+  // New answers live under the date. These fallbacks gently understand old saved answers too.
+  if (state?.rsvps?.[date]) return state.rsvps[date];
+  const oldCancellations = state?.availability?.[date] || {};
+  if (Object.keys(oldCancellations).length) return Object.fromEntries(Object.keys(oldCancellations).map(id => [id, { status: 'out' }]));
+  const oldRsvps = state?.rsvps || {};
+  return Object.values(oldRsvps).some(value => value?.status) ? oldRsvps : {};
 }
-function buildAvailabilitySummary({ available, unavailable }) {
+function availabilityForDate(state, date) {
+  const answers = rsvpForDate(state, date);
+  const unavailable = PLAYERS.filter(player => answers[player.id]?.status === 'out');
+  const late = PLAYERS.filter(player => answers[player.id]?.status === 'late');
+  return { available: PLAYERS.filter(player => answers[player.id]?.status !== 'out'), unavailable, late };
+}
+function buildAvailabilitySummary({ available, unavailable, late = [] }) {
   const yes = available.length ? available.map(player => `✅ ${player.name}`).join(', ') : '_Ingen_';
+  const lateList = late.length ? late.map(player => `⏱️ ${player.name}`).join(', ') : '_Ingen_';
   const no = unavailable.length ? unavailable.map(player => `❌ ${player.name}`).join(', ') : '_Ingen_';
-  return `**Tillgänglighet** _(standard: tillgänglig om man inte avbokar)_\n${yes}\n\n**Kan inte**\n${no}`;
+  return `**Tillgänglighet** _(standard: tillgänglig om man inte avbokar)_\n${yes}\n\n**Sen**\n${lateList}\n\n**Kan inte**\n${no}`;
 }
 function emptyState() { return { wins: { kakan_logimox: 0, bjestavs_doxos: 0 }, rsvps: {}, memories: [], availability: {} }; }
 async function readState(env) {
@@ -257,14 +267,16 @@ async function readState(env) {
   return { ...emptyState(), ...state, wins: { ...emptyState().wins, ...(state?.wins || {}) }, rsvps: state?.rsvps || {}, memories: state?.memories || [] };
 }
 async function writeState(env, state) { if (env.GUBBSPLINTA_STATE) await env.GUBBSPLINTA_STATE.put('state', JSON.stringify(state)); }
-async function setRsvp(env, user, status) {
+async function setRsvp(env, user, status, date = nextTuesdayDate()) {
   const state = await readState(env);
-  state.rsvps[user.id] = { name: user.global_name || user.username || 'Okänd', status, at: new Date().toISOString() };
+  // One folder per match date means Discord and the website always read the same answer.
+  state.rsvps[date] ||= {};
+  state.rsvps[date][user.id] = { name: user.global_name || user.username || 'Okänd', status, at: new Date().toISOString() };
   await writeState(env, state);
 }
 function rsvpConfirmation(status) { return ({ in: '✅ Du är markerad som **med**.', late: '⏱️ Du är markerad som **sen**.', out: '❌ Du är markerad som **kan inte**.' })[status]; }
 function buildStatsMessage(state) {
-  const rsvp = Object.values(state.rsvps || {}).map(entry => `${entry.status === 'in' ? '✅' : entry.status === 'late' ? '⏱️' : '❌'} ${entry.name}`).join('\n') || '_Inga svar ännu._';
+  const rsvp = Object.values(rsvpForDate(state, nextTuesdayDate())).map(entry => `${entry.status === 'in' ? '✅' : entry.status === 'late' ? '⏱️' : '❌'} ${entry.name}`).join('\n') || '_Inga svar ännu._';
   const memory = state.memories?.[0] ? `\n\n**Senaste minnet**\n> ${state.memories[0].text} — ${state.memories[0].author}` : '';
   return `## GubbSplinta-statistik\n🟢 **Kakan + LogiMOX:** ${state.wins.kakan_logimox} vinster\n🔵 **Bjestavs + Doxos:** ${state.wins.bjestavs_doxos} vinster\n\n**Nästa match – RSVP**\n${rsvp}${memory}`;
 }
@@ -398,4 +410,4 @@ function safe(value, fallback) { return typeof value === 'string' ? value.replac
 function corsHeaders() { return { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }; }
 function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders() } }); }
 
-export const __testables = { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, roleIdsFromEnv, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability };
+export const __testables = { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, roleIdsFromEnv, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate };
