@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { __testables } from './worker.js';
 
-const { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, buildRsvpMessage, rsvpInteractionResponse, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate } = __testables;
+const { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, buildRsvpMessage, rsvpInteractionResponse, normalizeMemory, buildStatsMessage, buildHistoricStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate } = __testables;
 
 test('buildRoleSelectorMessage creates expanded Chaos Theory and Deep Rock role panels', () => {
   const message = buildRoleSelectorMessage();
@@ -60,6 +60,18 @@ test('normalizeMemory rejects empty notes and limits stored memory text', () => 
   assert.equal(normalizeMemory('x'.repeat(600)).length, 500);
 });
 
+test('buildHistoricStatsMessage puts the imported match archive before player totals', () => {
+  const message = buildHistoricStatsMessage({
+    matches: 935, spyWins: 429, mercWins: 506, topMap: { name: 'STEEL SQUAT', matches: 154 },
+    latest: { date: '2024-06-13', map: 'ENHANCED STEEL SQUAT', winner: 'MERCS' },
+    players: { logimox: { kills: 12, deaths: 20, objectives: 3 } }
+  });
+  assert.match(message, /935 avslutade matcher/i);
+  assert.match(message, /STEEL SQUAT.*154/i);
+  assert.match(message, /2024-06-13.*MERCS/i);
+  assert.match(message, /LogiMOX.*12 K.*20 D.*3 mål/i);
+});
+
 test('buildStatsMessage shows fixed teams and a remembered moment', () => {
   const message = buildStatsMessage({
     wins: { kakan_logimox: 2, bjestavs_doxos: 1 },
@@ -109,8 +121,8 @@ test('dated RSVP answers drive the same availability story for Discord and web',
 
 test('an old undated RSVP never leaks into a different match date', () => {
   const state = { rsvps: { '151053160847376384': { name: 'LogiMOX', status: 'late' } } };
-  assert.deepEqual(rsvpForDate(state, '2026-08-18'), {});
-  const availability = availabilityForDate(state, '2026-08-18');
+  assert.deepEqual(rsvpForDate(state, '2030-08-18'), {});
+  const availability = availabilityForDate(state, '2030-08-18');
   assert.deepEqual(availability.late, []);
   assert.deepEqual(availability.unavailable, []);
 });

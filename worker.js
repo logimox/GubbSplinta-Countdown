@@ -175,7 +175,10 @@ async function handleApplicationCommand(interaction, env) {
     return discordResponse({ type: 4, data: buildRsvpMessage(buildAvailabilitySummary(availabilityForDate(await readState(env), date)), date) });
   }
   if (name === 'välkommen') return discordResponse({ type: 4, data: { content: buildWelcomeMessage() } });
-  if (name === 'stats') return discordResponse({ type: 4, data: { content: buildStatsMessage(await readState(env)) } });
+  if (name === 'stats') {
+    const [state, historic] = await Promise.all([readState(env), loadHistoricStats(env)]);
+    return discordResponse({ type: 4, data: { content: buildStatsMessage(state, historic) } });
+  }
   if (name === 'minne') {
     const text = normalizeMemory(interaction.data?.options?.find(option => option.name === 'text')?.value);
     if (!text) return discordResponse(ephemeral('Skriv ett minne på 1–500 tecken.'));
@@ -282,10 +285,20 @@ function rsvpConfirmation(status) { return ({ in: '✅ Du är markerad som **med
 function rsvpInteractionResponse(status, availability, date) {
   return { type: 7, data: buildRsvpMessage(`${rsvpConfirmation(status)}\n\n${buildAvailabilitySummary(availability)}`, date) };
 }
-function buildStatsMessage(state) {
+function buildHistoricStatsMessage(historic) {
+  if (!historic?.matches) return '';
+  const latest = historic.latest ? `${historic.latest.date} · ${historic.latest.map} · ${historic.latest.winner}` : 'okänd';
+  const players = Object.entries(historic.players || {}).map(([id, stats]) => {
+    const name = { kakan: 'Kakan', logimox: 'LogiMOX', bjestavs: 'Bjestavs', doxos: 'Doxos' }[id] || id;
+    return `• ${name}: ${stats.kills || 0} K · ${stats.deaths || 0} D · ${stats.objectives || 0} mål`;
+  }).join('\n');
+  return `**Chaos Theory-arkiv**\n${historic.matches} avslutade matcher · 🕵️ SPY ${historic.spyWins || 0} · 🔦 MERCS ${historic.mercWins || 0}\nVanligaste karta: **${historic.topMap?.name || 'okänd'}** (${historic.topMap?.matches || 0})\nSenaste: ${latest}${players ? `\n\n**Spelarstatistik**\n${players}` : ''}`;
+}
+function buildStatsMessage(state, historic = null) {
   const rsvp = Object.values(rsvpForDate(state, nextTuesdayDate())).map(entry => `${entry.status === 'in' ? '✅' : entry.status === 'late' ? '⏱️' : '❌'} ${entry.name}`).join('\n') || '_Inga svar ännu._';
+  const archive = buildHistoricStatsMessage(historic);
   const memory = state.memories?.[0] ? `\n\n**Senaste minnet**\n> ${state.memories[0].text} — ${state.memories[0].author}` : '';
-  return `## GubbSplinta-statistik\n🟢 **Kakan + LogiMOX:** ${state.wins.kakan_logimox} vinster\n🔵 **Bjestavs + Doxos:** ${state.wins.bjestavs_doxos} vinster\n\n**Nästa match – RSVP**\n${rsvp}${memory}`;
+  return `## GubbSplinta-statistik${archive ? `\n\n${archive}` : ''}\n\n🟢 **Kakan + LogiMOX:** ${state.wins.kakan_logimox} manuella vinster\n🔵 **Bjestavs + Doxos:** ${state.wins.bjestavs_doxos} manuella vinster\n\n**Nästa match – RSVP**\n${rsvp}${memory}`;
 }
 
 function buildRoleSelectorMessage() {
@@ -406,6 +419,15 @@ function buildDiscordMessage({ title, weekday, time, targetDate, remaining, maps
 function buildRepoText({ title, weekday, time, targetDate, remaining, maps }) { return [`${title}`, `Uppdaterad: ${new Date().toISOString()}`, `Spel: ${weekday} ${time}`, `Nästa tillfälle: ${targetDate}`, `Tid kvar: ${remaining}`, '', 'Aktuellt kartförslag:', ...maps.map((map, index) => `${index + 1}. ${map.file} — ${map.full}`), ''].join('\n'); }
 async function postToDiscord(webhookUrl, content) { const response = await fetch(webhookUrl + '?wait=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content, allowed_mentions: { parse: [] }, username: 'GubbSplinta Bot' }) }); if (!response.ok) throw new Error('Discord rejected request: ' + await response.text()); return (await response.json()).id; }
 async function deleteDiscordMessage(webhookUrl, messageId) { const response = await fetch(webhookUrl.replace(/\?.*$/, '') + '/messages/' + messageId, { method: 'DELETE' }); if (!response.ok && response.status !== 404) throw new Error('Discord delete failed: ' + await response.text()); }
+async function loadHistoricStats(env) {
+  // The full game log stays in the repo; the Worker reads only this tiny generated summary.
+  const path = env.GITHUB_CHAOS_STATS_PATH || 'chaostheory-stats.json';
+  try {
+    const response = await fetch(`https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}?ref=${encodeURIComponent(env.GITHUB_BRANCH || 'main')}`, { headers: githubHeaders(env) });
+    if (!response.ok) return null;
+    return JSON.parse(decodeBase64Utf8((await response.json()).content || ''));
+  } catch { return null; }
+}
 async function getLastMessageId(env) { const current = await fetch(`https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${env.GITHUB_MESSAGE_ID_PATH || '.gubbsplinta-last-discord-message.txt'}?ref=${encodeURIComponent(env.GITHUB_BRANCH || 'main')}`, { headers: githubHeaders(env) }); if (current.status === 404) return ''; if (!current.ok) throw new Error('GitHub read failed: ' + await current.text()); return decodeBase64Utf8((await current.json()).content || '').trim(); }
 async function setLastMessageId(env, messageId) { return writeGithubFile(env, env.GITHUB_MESSAGE_ID_PATH || '.gubbsplinta-last-discord-message.txt', String(messageId), 'Store last Discord message id'); }
 async function updateGithubFile(env, textContent) { return writeGithubFile(env, env.GITHUB_FILE_PATH || 'current-match.txt', textContent, 'Update current match proposal'); }
@@ -417,4 +439,4 @@ function safe(value, fallback) { return typeof value === 'string' ? value.replac
 function corsHeaders() { return { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }; }
 function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders() } }); }
 
-export const __testables = { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, roleIdsFromEnv, buildRsvpMessage, rsvpInteractionResponse, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate };
+export const __testables = { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, roleIdsFromEnv, buildRsvpMessage, rsvpInteractionResponse, normalizeMemory, buildStatsMessage, buildHistoricStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate };
