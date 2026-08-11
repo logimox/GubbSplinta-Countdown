@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { __testables } from './worker.js';
 
-const { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate } = __testables;
+const { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, buildRsvpMessage, rsvpInteractionResponse, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate } = __testables;
 
 test('buildRoleSelectorMessage creates expanded Chaos Theory and Deep Rock role panels', () => {
   const message = buildRoleSelectorMessage();
@@ -43,7 +43,15 @@ test('buildRsvpMessage keeps the fixed teams visible and provides RSVP controls'
   assert.match(message.content, /Kakan.*LogiMOX/i);
   assert.match(message.content, /Bjestavs.*Doxos/i);
   assert.equal(message.components[0].components.length, 3);
-  assert.equal(message.components[0].components[0].custom_id, 'rsvp:in');
+  assert.match(message.components[0].components[0].custom_id, /^rsvp:in:\d{4}-\d{2}-\d{2}$/);
+});
+
+test('an RSVP button updates the shared Discord message instead of only whispering privately', () => {
+  const response = rsvpInteractionResponse('in', { available: [{ name: 'Kakan' }], late: [], unavailable: [{ name: 'Doxos' }] }, '2026-08-11');
+  assert.equal(response.type, 7);
+  assert.match(response.data.content, /Kakan/);
+  assert.match(response.data.content, /Doxos/);
+  assert.equal(response.data.components[0].components[0].custom_id, 'rsvp:in:2026-08-11');
 });
 
 test('normalizeMemory rejects empty notes and limits stored memory text', () => {
@@ -97,6 +105,14 @@ test('dated RSVP answers drive the same availability story for Discord and web',
   assert.match(summary, /⏱️ LogiMOX/);
   assert.match(summary, /❌ Doxos/);
   assert.match(summary, /Standard: tillgänglig/i);
+});
+
+test('an old undated RSVP never leaks into a different match date', () => {
+  const state = { rsvps: { '151053160847376384': { name: 'LogiMOX', status: 'late' } } };
+  assert.deepEqual(rsvpForDate(state, '2026-08-18'), {});
+  const availability = availabilityForDate(state, '2026-08-18');
+  assert.deepEqual(availability.late, []);
+  assert.deepEqual(availability.unavailable, []);
 });
 
 test('only LogiMOX can manage another player availability', () => {

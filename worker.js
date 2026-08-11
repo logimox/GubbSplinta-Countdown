@@ -152,12 +152,14 @@ async function handleDiscordInteraction(request, env) {
       }
     }
     if (interaction.data?.custom_id?.startsWith('rsvp:')) {
-      const status = interaction.data.custom_id.slice(5);
+      const [, status, dateText] = interaction.data.custom_id.split(':');
+      const date = normalizeMatchDate(dateText) || nextTuesdayDate();
       if (!['in', 'late', 'out'].includes(status)) return discordResponse(ephemeral('Okänd RSVP-signal.'));
       const user = interaction.member?.user || interaction.user;
       // Discord buttons and the website write to the same match-date RSVP box.
-      await setRsvp(env, user, status, nextTuesdayDate());
-      return discordResponse(ephemeral(`${rsvpConfirmation(status)} Webbpanelen uppdateras också.`));
+      await setRsvp(env, user, status, date);
+      // Type 7 redraws the same shared Discord panel, so everyone sees the new answer.
+      return discordResponse(rsvpInteractionResponse(status, availabilityForDate(await readState(env), date), date));
     }
     return discordResponse(ephemeral('Den knappen verkar ha blivit komprometterad av en lampa. Prova panelen igen.'));
   }
@@ -219,13 +221,13 @@ function nextTuesdayDate(now = new Date()) {
   date.setDate(date.getDate() + days + (days === 0 && date.getHours() >= 20 ? 7 : 0));
   return date.toISOString().slice(0, 10);
 }
-function buildRsvpMessage(availability = '', date = '') {
+function buildRsvpMessage(availability = '', date = nextTuesdayDate()) {
   return {
     content: `## GubbSplinta RSVP\n**Fasta lag**\n🟢 Kakan + LogiMOX\n🔵 Bjestavs + Doxos\n\nSvara för nästa match. Statusen sparas och visas med \`/stats\`.${date ? `\n\n**Matchdatum:** ${date}` : ''}${availability ? `\n\n${availability}` : ''}`,
     components: [{ type: 1, components: [
-      { type: 2, style: 3, label: 'Jag är med', emoji: { name: '✅' }, custom_id: 'rsvp:in' },
-      { type: 2, style: 1, label: 'Sen', emoji: { name: '⏱️' }, custom_id: 'rsvp:late' },
-      { type: 2, style: 4, label: 'Kan inte', emoji: { name: '❌' }, custom_id: 'rsvp:out' }
+      { type: 2, style: 3, label: 'Jag är med', emoji: { name: '✅' }, custom_id: `rsvp:in:${date}` },
+      { type: 2, style: 1, label: 'Sen', emoji: { name: '⏱️' }, custom_id: `rsvp:late:${date}` },
+      { type: 2, style: 4, label: 'Kan inte', emoji: { name: '❌' }, custom_id: `rsvp:out:${date}` }
     ] }]
   };
 }
@@ -246,7 +248,9 @@ function rsvpForDate(state, date) {
   const oldCancellations = state?.availability?.[date] || {};
   if (Object.keys(oldCancellations).length) return Object.fromEntries(Object.keys(oldCancellations).map(id => [id, { status: 'out' }]));
   const oldRsvps = state?.rsvps || {};
-  return Object.values(oldRsvps).some(value => value?.status) ? oldRsvps : {};
+  // Old answers had no date. They belong only to the currently upcoming Tuesday,
+  // never to a later match.
+  return date === nextTuesdayDate() && Object.values(oldRsvps).some(value => value?.status) ? oldRsvps : {};
 }
 function availabilityForDate(state, date) {
   const answers = rsvpForDate(state, date);
@@ -275,6 +279,9 @@ async function setRsvp(env, user, status, date = nextTuesdayDate()) {
   await writeState(env, state);
 }
 function rsvpConfirmation(status) { return ({ in: '✅ Du är markerad som **med**.', late: '⏱️ Du är markerad som **sen**.', out: '❌ Du är markerad som **kan inte**.' })[status]; }
+function rsvpInteractionResponse(status, availability, date) {
+  return { type: 7, data: buildRsvpMessage(`${rsvpConfirmation(status)}\n\n${buildAvailabilitySummary(availability)}`, date) };
+}
 function buildStatsMessage(state) {
   const rsvp = Object.values(rsvpForDate(state, nextTuesdayDate())).map(entry => `${entry.status === 'in' ? '✅' : entry.status === 'late' ? '⏱️' : '❌'} ${entry.name}`).join('\n') || '_Inga svar ännu._';
   const memory = state.memories?.[0] ? `\n\n**Senaste minnet**\n> ${state.memories[0].text} — ${state.memories[0].author}` : '';
@@ -410,4 +417,4 @@ function safe(value, fallback) { return typeof value === 'string' ? value.replac
 function corsHeaders() { return { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }; }
 function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders() } }); }
 
-export const __testables = { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, roleIdsFromEnv, buildRsvpMessage, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate };
+export const __testables = { buildRoleSelectorMessage, parseCustomId, resolveRoleChange, roleIdsFromEnv, buildRsvpMessage, rsvpInteractionResponse, normalizeMemory, buildStatsMessage, buildWelcomeMessage, normalizeMatchDate, availabilityForDate, buildAvailabilitySummary, resolvePlayer, canManageAvailability, rsvpForDate };

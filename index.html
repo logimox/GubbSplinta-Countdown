@@ -239,6 +239,8 @@
         if (!response.ok) throw new Error(result.error || 'Uppdateringen misslyckades.');
         availabilityData = result;
         renderAvailability();
+        // Re-read the shared state so this page reflects the saved answer.
+        await loadAvailability();
       } catch (error) {
         availabilityStatus.textContent = 'FEL: ' + error.message;
         availabilityToggle.disabled = false;
@@ -473,6 +475,8 @@
     loadAvailability();
     loadMapsFromTextFile().then(renderMaps);
     setInterval(updateCountdown, 1000);
+    // Check the shared RSVP box regularly, so Discord changes appear without a reload.
+    setInterval(loadAvailability, 30000);
   </script>
 </body>
 </html>
