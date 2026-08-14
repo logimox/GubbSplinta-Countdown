@@ -1,11 +1,11 @@
 GubbSplinta Matchoff
-Uppdaterad: 2026-08-10T18:41:59.931Z
+Uppdaterad: 2026-08-14T09:29:23.191Z
 Spel: TISDAG 20:30
-Nästa tillfälle: TISDAG 11 AUGUSTI 2026 KL 20:30
-Tid kvar: 0 d, 23 h, 48 min, 0 sek
+Nästa tillfälle: TISDAG 18 AUGUSTI 2026 KL 20:30
+Tid kvar: 4 d, 9 h, 0 min, 36 sek
 
 Aktuellt kartförslag:
-1. AquaE.sdc — Aqua
-2. OrphS.sdc — Orphanage
-3. StroD.sdc — Stockhouse
-4. ZiopD.sdc — Zioplex
+1. GhostS.sdc — Ghost
+2. Mise.sdc — Missile
+3. PanaS.sdc — Panama
+4. SteeP.sdc — Steel Squat
