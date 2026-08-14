@@ -27,6 +27,15 @@ test('page links PWA metadata, gives text-only install instructions, and registe
   assert.match(page, /navigator\.serviceWorker\.register\('\.\/service-worker\.js'\)/);
 });
 
+test('web availability controls include a late RSVP action that writes Discord-compatible status', async () => {
+  const page = await read('index.html');
+
+  assert.match(page, /id="availabilityLate"/);
+  assert.match(page, /MARKERA.*SOM SEN/);
+  assert.match(page, /function setAvailabilityStatus\(status\)/);
+  assert.match(page, /JSON\.stringify\(\{ status, playerId: targetId \}\)/);
+});
+
 test('map section places the randomize control with compact visible map cards', async () => {
   const page = await read('index.html');
   const styles = await read('style.css');

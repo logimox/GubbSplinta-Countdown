@@ -119,12 +119,13 @@ async function handleAvailability(request, env, url) {
   const player = await sessionPlayer(request, env);
   if (!player) return json({ error: 'Logga in med Discord eller din privata snabb-länk.' }, 401);
   const body = await request.json().catch(() => ({}));
-  if (typeof body.unavailable !== 'boolean') return json({ error: 'unavailable must be boolean' }, 400);
+  const status = typeof body.status === 'string' ? body.status : body.unavailable === true ? 'out' : body.unavailable === false ? 'in' : '';
+  if (!['in', 'late', 'out'].includes(status)) return json({ error: 'status must be in, late, or out' }, 400);
   const target = resolvePlayer(body.playerId || player.id);
   if (!target) return json({ error: 'Okänd spelare.' }, 400);
   if (!canManageAvailability(player, target)) return json({ error: 'Du kan bara ändra din egen tillgänglighet.' }, 403);
-  // The website's two choices translate into the same three RSVP words Discord uses.
-  await setRsvp(env, { id: target.id, global_name: target.name, username: target.name }, body.unavailable ? 'out' : 'in', date);
+  // The website and Discord write the same three RSVP states for the same match date.
+  await setRsvp(env, { id: target.id, global_name: target.name, username: target.name }, status, date);
   const latest = await readState(env);
   return new Response(JSON.stringify({ date, player: target, actor: player, ...availabilityForDate(latest, date) }), { headers: { 'Content-Type': 'application/json', ...availabilityHeaders() } });
 }

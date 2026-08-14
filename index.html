@@ -70,6 +70,9 @@
       </div>
       <div class="two secondary-actions">
         <a class="btn discord" id="discordLogin" href="https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/auth/discord">◉ LOGGA IN MED DISCORD</a>
+        <button class="btn late-action" type="button" id="availabilityLate" disabled>LOGGA IN FÖR ATT MARKERA SEN</button>
+      </div>
+      <div class="two secondary-actions">
         <button class="btn" type="button" id="availabilityToggle" disabled>LOGGA IN FÖR ATT BOKA AV</button>
       </div>
       <p class="tiny" id="availabilityStatus">Privat snabb-länk fungerar också: öppna din personliga länk en gång för att logga in.</p>
@@ -127,6 +130,7 @@
     const availabilityDate = document.getElementById('availabilityDate');
     const availabilityStatus = document.getElementById('availabilityStatus');
     const availabilityToggle = document.getElementById('availabilityToggle');
+    const availabilityLate = document.getElementById('availabilityLate');
     const discordLogin = document.getElementById('discordLogin');
     const adminAvailability = document.getElementById('adminAvailability');
     const availabilityPlayer = document.getElementById('availabilityPlayer');
@@ -210,20 +214,25 @@
         if (isAdmin) {
           adminAvailability.hidden = false;
           const selected = availabilityPlayer.value || signedInPlayer.id;
-          const players = [...(availabilityData.available || []), ...(availabilityData.unavailable || [])];
+          const players = [...(availabilityData.available || []), ...(availabilityData.late || []), ...(availabilityData.unavailable || [])];
           availabilityPlayer.innerHTML = players.map(player => `<option value="${player.id}" ${player.id === selected ? 'selected' : ''}>${player.name}</option>`).join('');
         } else adminAvailability.hidden = true;
         const targetId = isAdmin ? (availabilityPlayer.value || signedInPlayer.id) : signedInPlayer.id;
-        const target = [...(availabilityData.available || []), ...(availabilityData.unavailable || [])].find(player => player.id === targetId) || signedInPlayer;
+        const target = [...(availabilityData.available || []), ...(availabilityData.late || []), ...(availabilityData.unavailable || [])].find(player => player.id === targetId) || signedInPlayer;
         const isUnavailable = (availabilityData.unavailable || []).some(player => player.id === target.id);
+        const isLate = (availabilityData.late || []).some(player => player.id === target.id);
         availabilityToggle.disabled = false;
+        availabilityLate.disabled = false;
         availabilityToggle.textContent = isUnavailable ? `MARKERA ${target.name.toUpperCase()} SOM TILLGÄNGLIG` : `${target.name.toUpperCase()} KAN INTE DENNA DAG`;
-        availabilityStatus.textContent = isAdmin ? 'ADMINLÄGE: DU KAN ÄNDRA ALLAS TILLGÄNGLIGHET.' : `INLOGGAD SOM ${signedInPlayer.name.toUpperCase()}. ${isUnavailable ? 'DIN AVBOKNING ÄR REGISTRERAD.' : 'DU RÄKNAS SOM TILLGÄNGLIG.'}`;
+        availabilityLate.textContent = isLate ? `MARKERA ${target.name.toUpperCase()} SOM I TID` : `MARKERA ${target.name.toUpperCase()} SOM SEN`;
+        availabilityStatus.textContent = isAdmin ? 'ADMINLÄGE: DU KAN ÄNDRA ALLAS RSVP-STATUS.' : `INLOGGAD SOM ${signedInPlayer.name.toUpperCase()}. ${isUnavailable ? 'DIN AVBOKNING ÄR REGISTRERAD.' : isLate ? 'DU ÄR MARKERAD SOM SEN.' : 'DU RÄKNAS SOM TILLGÄNGLIG.'}`;
         discordLogin.textContent = `◉ INLOGGAD: ${signedInPlayer.name.toUpperCase()}`;
       } else {
         adminAvailability.hidden = true;
         availabilityToggle.disabled = true;
+        availabilityLate.disabled = true;
         availabilityToggle.textContent = 'LOGGA IN FÖR ATT BOKA AV';
+        availabilityLate.textContent = 'LOGGA IN FÖR ATT MARKERA SEN';
         availabilityStatus.textContent = 'LOGGA IN MED DISCORD ELLER ÖPPNA DIN PRIVATA SNABB-LÄNK FÖR ATT ÄNDRA DIN EGEN STATUS.';
       }
     }
@@ -243,25 +252,38 @@
         availabilityList.textContent = 'KUNDE INTE LADDA TILLGÄNGLIGHET: ' + error.message;
       }
     }
-    async function toggleAvailability() {
+    async function setAvailabilityStatus(status) {
       if (!signedInPlayer || !availabilityData) return;
       const targetId = signedInPlayer.id === logimoxId ? (availabilityPlayer.value || signedInPlayer.id) : signedInPlayer.id;
-      const unavailable = !(availabilityData.unavailable || []).some(player => player.id === targetId);
       availabilityToggle.disabled = true;
+      availabilityLate.disabled = true;
       try {
         const response = await fetch(`${API_URL}/availability?date=${encodeURIComponent(availabilityData.date)}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ unavailable, playerId: targetId })
+          method: 'PUT', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ status, playerId: targetId })
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Uppdateringen misslyckades.');
         availabilityData = result;
         renderAvailability();
-        // Re-read the shared state so this page reflects the saved answer.
+        // Re-read the shared state so this page reflects the answer from Discord too.
         await loadAvailability();
       } catch (error) {
         availabilityStatus.textContent = 'FEL: ' + error.message;
         availabilityToggle.disabled = false;
+        availabilityLate.disabled = false;
       }
+    }
+    function toggleAvailability() {
+      if (!availabilityData || !signedInPlayer) return;
+      const targetId = signedInPlayer.id === logimoxId ? (availabilityPlayer.value || signedInPlayer.id) : signedInPlayer.id;
+      const isUnavailable = (availabilityData.unavailable || []).some(player => player.id === targetId);
+      return setAvailabilityStatus(isUnavailable ? 'in' : 'out');
+    }
+    function toggleLateAvailability() {
+      if (!availabilityData || !signedInPlayer) return;
+      const targetId = signedInPlayer.id === logimoxId ? (availabilityPlayer.value || signedInPlayer.id) : signedInPlayer.id;
+      const isLate = (availabilityData.late || []).some(player => player.id === targetId);
+      return setAvailabilityStatus(isLate ? 'in' : 'late');
     }
     function absorbAuthFromHash() {
       const fragment = new URLSearchParams(location.hash.slice(1));
@@ -488,6 +510,7 @@
     document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
     postDiscordBtn.addEventListener('click', postMapsToDiscord);
     availabilityToggle.addEventListener('click', toggleAvailability);
+    availabilityLate.addEventListener('click', toggleLateAvailability);
     availabilityPlayer.addEventListener('change', renderAvailability);
     absorbAuthFromHash();
     updateCountdown();
