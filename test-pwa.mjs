@@ -15,13 +15,12 @@ test('PWA metadata declares standalone GubbSplinta and PNG icons', async () => {
   assert.ok(manifest.icons.some(icon => icon.src === 'icons/icon-512.png' && icon.sizes === '512x512'));
 });
 
-test('page links PWA metadata, gives text-only install instructions, and registers offline worker', async () => {
+test('page links PWA metadata, gives a brief app note, and registers offline worker', async () => {
   const page = await read('index.html');
 
   assert.match(page, /<link rel="manifest" href="manifest\.webmanifest">/);
   assert.match(page, /<link rel="apple-touch-icon" href="icons\/icon-180\.png">/);
-  assert.match(page, /SAFARI → DELA → LÄGG TILL PÅ HEMSKÄRMEN/);
-  assert.match(page, /CHROME → ⋮ → INSTALLERA APP/);
+  assert.match(page, /TILLGÄNGLIG SOM APP/);
   assert.doesNotMatch(page, /id="installApp"/);
   assert.doesNotMatch(page, /beforeinstallprompt/);
   assert.match(page, /navigator\.serviceWorker\.register\('\.\/service-worker\.js'\)/);
@@ -48,6 +47,19 @@ test('single-page tabs provide overview, availability, maps, and all-day schedul
   assert.match(page, /id="dayDate"/);
   assert.match(page, /id="dayTime"/);
   assert.match(styles, /\.tab-bar/);
+});
+
+test('overview is compact with a single-row countdown, brief app note, and scanner backdrop', async () => {
+  const page = await read('index.html');
+  const styles = await read('style.css');
+
+  assert.match(page, /class="radar-scan"/);
+  assert.match(page, /TILLGÄNGLIG SOM APP/);
+  assert.doesNotMatch(page, /HANTERA RSVP/);
+  assert.doesNotMatch(page, /VÄLJ BANOR/);
+  assert.match(styles, /\.countdown-panel\.compact/);
+  assert.match(styles, /\.radar-scan/);
+  assert.match(styles, /@media \(max-width:700px\).*\.countdown-panel\.compact \.grid\{grid-template-columns:repeat\(4,1fr\)/s);
 });
 
 test('Discord publishing appears below the map selection, not in overview actions', async () => {

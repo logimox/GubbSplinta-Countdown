@@ -18,6 +18,7 @@
 </head>
 <body>
   <div class="rain-layer" aria-hidden="true"></div>
+  <div class="radar-scan" aria-hidden="true"></div>
   <main class="wrap">
     <section class="hero panel">
       <div class="lens-scene" aria-hidden="true">
@@ -40,7 +41,7 @@
     </nav>
 
     <section class="tab-panel active" id="panel-overview">
-      <section class="panel countdown-panel">
+      <section class="panel countdown-panel compact">
         <div class="grid">
           <div class="box"><span class="num" id="days">00</span><span class="label">DAGAR</span></div>
           <div class="box"><span class="num" id="hours">00</span><span class="label">TIMMAR</span></div>
@@ -50,24 +51,13 @@
         <div class="status"><span id="targetText">NÄSTA INSATS: --</span><span class="cursor"></span></div>
         <div class="countdown-note" id="countdownNote">KVAR TILL SPEL: --</div>
       </section>
-      <section class="panel actions overview-actions">
-        <p class="eyebrow">COMMAND CENTER</p>
-        <div class="two">
-          <button class="btn" type="button" data-open-tab="availability">◉ HANTERA RSVP</button>
-          <button class="btn primary" type="button" data-open-tab="maps">⚙ VÄLJ BANOR</button>
-        </div>
-      </section>
-      <aside class="install-guide" aria-label="Installera GubbSplinta">
-        <strong>INSTALLERA SOM APP</strong>
-        <span>IPHONE/IPAD: SAFARI → DELA → LÄGG TILL PÅ HEMSKÄRMEN.</span>
-        <span>ANDROID: CHROME → ⋮ → INSTALLERA APP.</span>
-      </aside>
+      <p class="app-note">TILLGÄNGLIG SOM APP</p>
     </section>
 
     <section class="tab-panel" id="panel-availability">
       <section class="panel availability">
         <h2>Frånvaro för nästa insats</h2>
-        <p class="tiny">Standard är <strong>tillgänglig</strong>. Boka bara av eller markera sen — status syns här och i Discords <code>/rsvp</code>.</p>
+        <p class="tiny">RSVP synkas med Discord.</p>
         <div class="availability-date" id="availabilityDate">MATCHDATUM: --</div>
         <div id="availabilityList" class="availability-list" aria-live="polite">LADDAR TILLGÄNGLIGHET…</div>
         <div class="admin-availability" id="adminAvailability" hidden><label for="availabilityPlayer">ADMIN: VÄLJ SPELARE</label><select class="select" id="availabilityPlayer"></select></div>
