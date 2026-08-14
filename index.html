@@ -32,91 +32,70 @@
       <p class="subline">TACTICAL COUNTDOWN PROTOCOL</p>
     </section>
 
-    <section class="panel countdown-panel">
-      <div class="grid">
-        <div class="box"><span class="num" id="days">00</span><span class="label">DAGAR</span></div>
-        <div class="box"><span class="num" id="hours">00</span><span class="label">TIMMAR</span></div>
-        <div class="box"><span class="num" id="minutes">00</span><span class="label">MINUTER</span></div>
-        <div class="box"><span class="num" id="seconds">00</span><span class="label">SEKUNDER</span></div>
-      </div>
-      <div class="status"><span id="targetText">NÄSTA INSATS: --</span><span class="cursor"></span></div>
-      <div class="countdown-note" id="countdownNote">KVAR TILL SPEL: --</div>
-    </section>
+    <nav class="tab-bar" aria-label="GubbSplinta-vyer">
+      <button class="tab active" type="button" data-tab="overview">⌂ ÖVERSIKT</button>
+      <button class="tab" type="button" data-tab="availability">◉ RSVP</button>
+      <button class="tab" type="button" data-tab="maps">⚙ BANOR</button>
+      <button class="tab" type="button" data-tab="schedule">▣ HELDAG</button>
+    </nav>
 
-    <section class="panel actions">
-      <div class="two">
-        <button class="btn discord" type="button" id="postDiscord">✈ POSTA TILL DISCORD</button>
-        <button class="btn" type="button" id="copyMapNames">⎘ KOPIERA FILNAMN</button>
-      </div>
-      <div class="two secondary-actions">
-        <button class="btn" type="button" id="downloadCal">⬇ LADDA NER KALENDER (.CAL)</button>
-      </div>
-    </section>
-
-    <aside class="install-guide" aria-label="Installera GubbSplinta">
-      <strong>INSTALLERA SOM APP</strong>
-      <span>IPHONE/IPAD: SAFARI → DELA → LÄGG TILL PÅ HEMSKÄRMEN.</span>
-      <span>ANDROID: CHROME → ⋮ → INSTALLERA APP.</span>
-    </aside>
-
-    <section class="panel availability">
-      <h2>Frånvaro för nästa insats</h2>
-      <p class="tiny">Standard är <strong>tillgänglig</strong>. Boka bara av den dag du inte kan — status syns här och i Discords <code>/rsvp</code>.</p>
-      <div class="availability-date" id="availabilityDate">MATCHDATUM: --</div>
-      <div id="availabilityList" class="availability-list" aria-live="polite">LADDAR TILLGÄNGLIGHET…</div>
-      <div class="admin-availability" id="adminAvailability" hidden>
-        <label for="availabilityPlayer">ADMIN: VÄLJ SPELARE</label>
-        <select class="select" id="availabilityPlayer"></select>
-      </div>
-      <div class="two secondary-actions">
-        <a class="btn discord" id="discordLogin" href="https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/auth/discord">◉ LOGGA IN MED DISCORD</a>
-        <button class="btn late-action" type="button" id="availabilityLate" disabled>LOGGA IN FÖR ATT MARKERA SEN</button>
-      </div>
-      <div class="two secondary-actions">
-        <button class="btn" type="button" id="availabilityToggle" disabled>LOGGA IN FÖR ATT BOKA AV</button>
-      </div>
-      <p class="tiny" id="availabilityStatus">Privat snabb-länk fungerar också: öppna din personliga länk en gång för att logga in.</p>
-    </section>
-
-    <section class="panel settings">
-      <h2>Boka om</h2>
-      <form id="countdownForm" class="settings-grid">
+    <section class="tab-panel active" id="panel-overview">
+      <section class="panel countdown-panel">
+        <div class="grid">
+          <div class="box"><span class="num" id="days">00</span><span class="label">DAGAR</span></div>
+          <div class="box"><span class="num" id="hours">00</span><span class="label">TIMMAR</span></div>
+          <div class="box"><span class="num" id="minutes">00</span><span class="label">MINUTER</span></div>
+          <div class="box"><span class="num" id="seconds">00</span><span class="label">SEKUNDER</span></div>
+        </div>
+        <div class="status"><span id="targetText">NÄSTA INSATS: --</span><span class="cursor"></span></div>
+        <div class="countdown-note" id="countdownNote">KVAR TILL SPEL: --</div>
+      </section>
+      <section class="panel actions overview-actions">
+        <p class="eyebrow">COMMAND CENTER</p>
         <div class="two">
-          <div>
-            <label for="weekday">Veckodag</label>
-            <select class="select" id="weekday">
-              <option value="1">Måndag</option>
-              <option value="2" selected>Tisdag</option>
-              <option value="3">Onsdag</option>
-              <option value="4">Torsdag</option>
-              <option value="5">Fredag</option>
-              <option value="6">Lördag</option>
-              <option value="0">Söndag</option>
-            </select>
-          </div>
-          <div>
-            <label for="timeText">Tid (24H)</label>
-            <input class="input" id="timeText" type="text" inputmode="numeric" pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$" value="20:30" placeholder="20:30">
-          </div>
+          <button class="btn" type="button" data-open-tab="availability">◉ HANTERA RSVP</button>
+          <button class="btn primary" type="button" data-open-tab="maps">⚙ VÄLJ BANOR</button>
         </div>
-        <div class="two">
-          <button class="btn primary" type="submit">SPARA</button>
-          <button class="btn" type="button" id="presetTuesday">TIS 20:30</button>
-        </div>
-      </form>
+      </section>
+      <aside class="install-guide" aria-label="Installera GubbSplinta">
+        <strong>INSTALLERA SOM APP</strong>
+        <span>IPHONE/IPAD: SAFARI → DELA → LÄGG TILL PÅ HEMSKÄRMEN.</span>
+        <span>ANDROID: CHROME → ⋮ → INSTALLERA APP.</span>
+      </aside>
     </section>
 
-    <section class="panel maps">
-      <div class="maps-toolbar">
-        <div>
-          <p class="eyebrow">KVÄLLENS RUTT</p>
-          <h2>Aktivt förslag</h2>
-        </div>
-        <button class="btn primary" type="button" id="randomizeMaps">⚙ SLUMPA BANOR</button>
-      </div>
-      <div class="map-list map-list-compact" id="mapList"></div>
-      <p class="tiny">SLUMPA IGEN ELLER TRYCK PÅ EN BANA FÖR ATT VÄLJA ANNAN.</p>
-      <p class="tiny" id="copyStatus"></p>
+    <section class="tab-panel" id="panel-availability">
+      <section class="panel availability">
+        <h2>Frånvaro för nästa insats</h2>
+        <p class="tiny">Standard är <strong>tillgänglig</strong>. Boka bara av eller markera sen — status syns här och i Discords <code>/rsvp</code>.</p>
+        <div class="availability-date" id="availabilityDate">MATCHDATUM: --</div>
+        <div id="availabilityList" class="availability-list" aria-live="polite">LADDAR TILLGÄNGLIGHET…</div>
+        <div class="admin-availability" id="adminAvailability" hidden><label for="availabilityPlayer">ADMIN: VÄLJ SPELARE</label><select class="select" id="availabilityPlayer"></select></div>
+        <div class="two secondary-actions"><a class="btn discord" id="discordLogin" href="https://gubbsplinta-discord-proxy.gubbsplinta.workers.dev/auth/discord">◉ LOGGA IN MED DISCORD</a><button class="btn late-action" type="button" id="availabilityLate" disabled>LOGGA IN FÖR ATT MARKERA SEN</button></div>
+        <div class="two secondary-actions"><button class="btn" type="button" id="availabilityToggle" disabled>LOGGA IN FÖR ATT BOKA AV</button></div>
+        <p class="tiny" id="availabilityStatus">Privat snabb-länk fungerar också: öppna din personliga länk en gång för att logga in.</p>
+      </section>
+    </section>
+
+    <section class="tab-panel" id="panel-maps">
+      <section class="panel maps">
+        <div class="maps-toolbar"><div><p class="eyebrow">KVÄLLENS RUTT</p><h2>Aktivt förslag</h2></div><button class="btn primary" type="button" id="randomizeMaps">⚙ SLUMPA BANOR</button></div>
+        <div class="map-list map-list-compact" id="mapList"></div>
+        <p class="tiny">SLUMPA IGEN ELLER TRYCK PÅ EN BANA FÖR ATT VÄLJA ANNAN.</p>
+        <div class="two map-actions"><button class="btn" type="button" id="copyMapNames">⎘ KOPIERA FILNAMN</button><button class="btn discord" type="button" id="postDiscord">✈ POSTA TILL DISCORD</button></div>
+        <p class="tiny" id="copyStatus"></p>
+      </section>
+    </section>
+
+    <section class="tab-panel" id="panel-schedule">
+      <section class="panel settings">
+        <h2>Boka om hela dagen</h2>
+        <p class="tiny">VÄLJ EXAKT DATUM OCH STARTTID FÖR NÄSTA INSATS.</p>
+        <form id="countdownForm" class="settings-grid">
+          <div class="two"><div><label for="dayDate">Datum</label><input class="input" id="dayDate" type="date"></div><div><label for="dayTime">Tid (24H)</label><input class="input" id="dayTime" type="time" value="20:30"></div></div>
+          <div class="two"><button class="btn primary" type="submit">SPARA HELDAG</button><button class="btn" type="button" id="presetTuesday">ÅTERSTÄLL TIS 20:30</button></div>
+        </form>
+      </section>
     </section>
 
     <div class="footline" id="footLine">ORDINARIE: VARJE TISDAG 20:30 · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX</div>
@@ -140,8 +119,10 @@
     const logimoxId = '151053160847376384';
     const weekdayNames = ['SÖNDAG','MÅNDAG','TISDAG','ONSDAG','TORSDAG','FREDAG','LÖRDAG'];
     const form = document.getElementById('countdownForm');
-    const weekdayInput = document.getElementById('weekday');
-    const timeInput = document.getElementById('timeText');
+    const dayDateInput = document.getElementById('dayDate');
+    const dayTimeInput = document.getElementById('dayTime');
+    const tabs = [...document.querySelectorAll('[data-tab]')];
+    const tabPanels = [...document.querySelectorAll('.tab-panel')];
     const targetText = document.getElementById('targetText');
     const countdownNote = document.getElementById('countdownNote');
     const copyStatus = document.getElementById('copyStatus');
@@ -183,8 +164,17 @@
     ];
     let maps = [...defaultMaps];
     let currentMapPick = [];
-    let currentConfig = { weekday: 2, time: '20:30' };
+    let currentConfig = { weekday: 2, time: '20:30', date: '' };
 
+    function activateTab(tabName) {
+      tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === tabName));
+      tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === `panel-${tabName}`));
+      history.replaceState(null, '', `#${tabName}`);
+    }
+    function localDateKey(date) {
+      const pad = value => String(value).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
     function validTime(value) {
       return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(value);
     }
@@ -198,8 +188,18 @@
       target.setDate(now.getDate() + diffDays);
       return target;
     }
+    function configuredMatchDate() {
+      if (!currentConfig.date) return null;
+      const [year, month, day] = currentConfig.date.split('-').map(Number);
+      const [hours, minutes] = currentConfig.time.split(':').map(Number);
+      const target = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      return Number.isNaN(target.getTime()) ? null : target;
+    }
+    function nextMatchDate() {
+      return configuredMatchDate() || getNextOccurrence(currentConfig.weekday, currentConfig.time);
+    }
     function nextMatchDateKey() {
-      return getNextOccurrence(currentConfig.weekday, currentConfig.time).toISOString().slice(0, 10);
+      return localDateKey(nextMatchDate());
     }
     function authHeaders() { return availabilityAuth ? { Authorization: `Bearer ${availabilityAuth}` } : {}; }
     function renderAvailability() {
@@ -306,7 +306,7 @@
       return `${days} d, ${hours} h, ${minutes} min, ${seconds} sek`;
     }
     function updateCountdown() {
-      const next = getNextOccurrence(currentConfig.weekday, currentConfig.time);
+      const next = nextMatchDate();
       const totalSeconds = Math.max(0, Math.floor((next - new Date()) / 1000));
       els.days.textContent = String(Math.floor(totalSeconds / 86400)).padStart(2, '0');
       els.hours.textContent = String(Math.floor((totalSeconds % 86400) / 3600)).padStart(2, '0');
@@ -460,7 +460,7 @@
         copyStatus.textContent = 'SLUMPA MAPPAR FÖRST.';
         return;
       }
-      const next = getNextOccurrence(currentConfig.weekday, currentConfig.time);
+      const next = nextMatchDate();
       const totalSeconds = Math.max(0, Math.floor((next - new Date()) / 1000));
       const payload = {
         title: 'GubbSplinta Matchoff',
@@ -489,29 +489,38 @@
     }
     form.addEventListener('submit', (event) => {
       event.preventDefault();
-      const timeValue = timeInput.value.trim();
-      if (!validTime(timeValue)) {
-        copyStatus.textContent = 'ANGE TID SOM 24H, T.EX. 20:30.';
-        timeInput.focus();
+      const dateValue = dayDateInput.value;
+      const timeValue = dayTimeInput.value;
+      if (!dateValue || !validTime(timeValue)) {
+        copyStatus.textContent = 'VÄLJ DATUM OCH TID, T.EX. 20:30.';
+        dayDateInput.focus();
         return;
       }
-      currentConfig = { weekday: Number(weekdayInput.value), time: timeValue };
+      currentConfig = { ...currentConfig, date: dateValue, time: timeValue };
       updateCountdown();
       loadAvailability();
-      copyStatus.textContent = 'BOKNING UPPDATERAD.';
+      copyStatus.textContent = 'HELDAGEN ÄR UPPDATERAD.';
+      activateTab('overview');
     });
     document.getElementById('presetTuesday').addEventListener('click', () => {
-      weekdayInput.value = '2';
-      timeInput.value = '20:30';
+      const nextTuesday = getNextOccurrence(2, '20:30');
+      dayDateInput.value = localDateKey(nextTuesday);
+      dayTimeInput.value = '20:30';
       form.requestSubmit();
     });
     document.getElementById('randomizeMaps').addEventListener('click', renderMaps);
     document.getElementById('copyMapNames').addEventListener('click', copyMapNames);
-    document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
     postDiscordBtn.addEventListener('click', postMapsToDiscord);
     availabilityToggle.addEventListener('click', toggleAvailability);
     availabilityLate.addEventListener('click', toggleLateAvailability);
     availabilityPlayer.addEventListener('change', renderAvailability);
+    tabs.forEach(tab => tab.addEventListener('click', () => activateTab(tab.dataset.tab)));
+    document.querySelectorAll('[data-open-tab]').forEach(button => button.addEventListener('click', () => activateTab(button.dataset.openTab)));
+    const initialTab = location.hash.slice(1);
+    if (tabs.some(tab => tab.dataset.tab === initialTab)) activateTab(initialTab);
+    const defaultMatch = getNextOccurrence(2, '20:30');
+    dayDateInput.value = localDateKey(defaultMatch);
+    dayTimeInput.value = '20:30';
     absorbAuthFromHash();
     updateCountdown();
     loadAvailability();

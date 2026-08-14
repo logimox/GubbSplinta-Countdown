@@ -36,6 +36,29 @@ test('web availability controls include a late RSVP action that writes Discord-c
   assert.match(page, /JSON\.stringify\(\{ status, playerId: targetId \}\)/);
 });
 
+test('single-page tabs provide overview, availability, maps, and all-day scheduling', async () => {
+  const page = await read('index.html');
+  const styles = await read('style.css');
+
+  for (const tab of ['overview', 'availability', 'maps', 'schedule']) {
+    assert.match(page, new RegExp(`data-tab="${tab}"`));
+    assert.match(page, new RegExp(`id="panel-${tab}"`));
+  }
+  assert.match(page, /function activateTab\(tabName\)/);
+  assert.match(page, /id="dayDate"/);
+  assert.match(page, /id="dayTime"/);
+  assert.match(styles, /\.tab-bar/);
+});
+
+test('Discord publishing appears below the map selection, not in overview actions', async () => {
+  const page = await read('index.html');
+
+  const mapPanel = page.indexOf('id="panel-maps"');
+  const postButton = page.indexOf('id="postDiscord"');
+  assert.ok(mapPanel >= 0 && postButton > mapPanel);
+  assert.doesNotMatch(page.slice(0, mapPanel), /id="postDiscord"/);
+});
+
 test('map section places the randomize control with compact visible map cards', async () => {
   const page = await read('index.html');
   const styles = await read('style.css');
