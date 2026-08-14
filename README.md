@@ -2,6 +2,10 @@
 
 Sidan: https://logimox.github.io/GubbSplinta-Countdown/
 
+## Installera som app (PWA)
+
+GubbSplinta kan installeras på Android, iPhone/iPad och datorer med egen ikon och fristående appfönster. På Android/desktop visar sidan en **Installera GubbSplinta**-knapp när webbläsaren stödjer direktinstallation. På iPhone/iPad: öppna sidan i Safari → **Dela** → **Lägg till på hemskärmen**. Senaste appskal och banlista sparas även för offlineöppning; inloggning, RSVP och Discord-data kräver fortfarande internet.
+
 Cloudflare-workern behåller den tidigare `POST /post-maps`-funktionen och lägger till en Discord-rollväljare i Splinter Cell: Chaos Theory-stil.
 
 ## Rollterminalen

@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GubbSplinta Matchoff</title>
   <meta name="description" content="Repeterande nedräkning med regnig Splinter Cell-känsla, Discord-postning och GitHub-synk.">
+  <meta name="theme-color" content="#020503">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GubbSplinta">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -45,6 +51,10 @@
       <div class="two secondary-actions">
         <button class="btn" type="button" id="copyMapNames">⎘ KOPIERA FILNAMN</button>
         <button class="btn" type="button" id="downloadCal">⬇ LADDA NER KALENDER (.CAL)</button>
+      </div>
+      <div class="install-row" id="installRow" hidden>
+        <button class="btn install" type="button" id="installApp">▣ INSTALLERA GUBBSPLINTA</button>
+        <p class="tiny" id="installHint" aria-live="polite"></p>
       </div>
     </section>
 
@@ -127,6 +137,10 @@
     const mapList = document.getElementById('mapList');
     const footLine = document.getElementById('footLine');
     const postDiscordBtn = document.getElementById('postDiscord');
+    const installRow = document.getElementById('installRow');
+    const installApp = document.getElementById('installApp');
+    const installHint = document.getElementById('installHint');
+    let deferredInstallPrompt = null;
     const els = { days: document.getElementById('days'), hours: document.getElementById('hours'), minutes: document.getElementById('minutes'), seconds: document.getElementById('seconds') };
     const defaultMaps = [
       { file: 'AquaE.sdc', full: 'Aqua' },
@@ -167,6 +181,41 @@
     function validTime(value) {
       return /^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(value);
     }
+    function isStandaloneApp() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+    function showInstallGuide() {
+      installRow.hidden = false;
+      const isApple = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      installHint.textContent = isApple
+        ? 'IPHONE/IPAD: SAFARI → DELA → LÄGG TILL PÅ HEMSKÄRMEN.'
+        : 'ÖPPNA MENYN I DIN WEBBLÄSARE OCH VÄLJ INSTALLERA APP.';
+    }
+    async function installGubbSplinta() {
+      if (!deferredInstallPrompt) {
+        showInstallGuide();
+        return;
+      }
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      if (choice.outcome === 'accepted') {
+        installRow.hidden = true;
+      } else {
+        installHint.textContent = 'INSTALLATION AVBRÖTS — DU KAN PROVA IGEN NÄR DU VILL.';
+      }
+    }
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installRow.hidden = false;
+      installHint.textContent = 'INSTALLERA APPEN FÖR EGEN IKON OCH HELSKÄRMSLÄGE.';
+    });
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      installRow.hidden = true;
+    });
+    if (!isStandaloneApp()) showInstallGuide();
     function getNextOccurrence(targetWeekday, timeValue) {
       const now = new Date();
       const [hours, minutes] = timeValue.split(':').map(Number);
@@ -467,6 +516,7 @@
     document.getElementById('randomizeMaps').addEventListener('click', renderMaps);
     document.getElementById('copyMapNames').addEventListener('click', copyMapNames);
     document.getElementById('downloadCal').addEventListener('click', downloadCalForMaps);
+    installApp.addEventListener('click', installGubbSplinta);
     postDiscordBtn.addEventListener('click', postMapsToDiscord);
     availabilityToggle.addEventListener('click', toggleAvailability);
     availabilityPlayer.addEventListener('change', renderAvailability);
@@ -477,6 +527,9 @@
     setInterval(updateCountdown, 1000);
     // Check the shared RSVP box regularly, so Discord changes appear without a reload.
     setInterval(loadAvailability, 30000);
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+    }
   </script>
 </body>
 </html>
