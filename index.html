@@ -19,6 +19,7 @@
 <body>
   <div class="rain-layer" aria-hidden="true"></div>
   <div class="radar-scan" aria-hidden="true"></div>
+  <button class="cat-mode-toggle" id="catModeToggle" type="button" aria-label="Aktivera kattläge" title="?">🐾</button>
   <main class="wrap">
     <section class="hero panel" id="hero">
       <div class="lens-scene" aria-hidden="true">
@@ -38,6 +39,7 @@
       <button class="tab" type="button" data-tab="availability">◉ RSVP</button>
       <button class="tab" type="button" data-tab="maps">⚙ BANOR</button>
       <button class="tab" type="button" data-tab="schedule">▣ HELDAG</button>
+      <button class="tab" type="button" data-tab="faq">? FAQ</button>
     </nav>
 
     <section class="tab-panel active" id="panel-overview">
@@ -88,6 +90,16 @@
       </section>
     </section>
 
+    <section class="tab-panel" id="panel-faq">
+      <section class="panel faq">
+        <h2>Vanliga frågor</h2>
+        <details class="faq-item"><summary>Hur funkar webbsidan?</summary><p>Översikt visar nästa spelkväll. Använd RSVP för status, Banor för kvällens urval och Heldag om tiden ändras.</p></details>
+        <details class="faq-item"><summary>Hur installerar jag appen?</summary><p>Öppna sidan i webbläsaren och välj Lägg till på hemskärmen eller Installera app. Den öppnas sedan som en vanlig app.</p></details>
+        <details class="faq-item"><summary>Hur funkar Discordbotten?</summary><p>Botten håller samma RSVP-status som sidan och samlar kvällens banor. Sidan kan posta banförslaget direkt till Discord.</p></details>
+        <details class="faq-item"><summary>Vilka kommandon finns?</summary><p><code>/rsvp</code> visar och uppdaterar din status. <code>/banor</code> visar banor. <code>/stats</code> visar statistik.</p></details>
+      </section>
+    </section>
+
     <div class="footline" id="footLine">ORDINARIE: VARJE TISDAG 20:30 · SISTA PLATSEN ÄR ALLTID STEEL SQUAT ELLER ZIOPLEX</div>
   </main>
 
@@ -114,6 +126,7 @@
     const tabs = [...document.querySelectorAll('[data-tab]')];
     const tabPanels = [...document.querySelectorAll('.tab-panel')];
     const hero = document.getElementById('hero');
+    const catModeToggle = document.getElementById('catModeToggle');
     const targetText = document.getElementById('targetText');
     const countdownNote = document.getElementById('countdownNote');
     const copyStatus = document.getElementById('copyStatus');
@@ -162,6 +175,11 @@
       tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === `panel-${tabName}`));
       hero.classList.toggle('compact', tabName !== 'overview');
       history.replaceState(null, '', `#${tabName}`);
+    }
+    function toggleCatMode() {
+      const active = document.body.classList.toggle('catgirl-mode');
+      catModeToggle.setAttribute('aria-label', active ? 'Stäng kattläge' : 'Aktivera kattläge');
+      catModeToggle.textContent = active ? '🐱' : '🐾';
     }
     function localDateKey(date) {
       const pad = value => String(value).padStart(2, '0');
@@ -506,6 +524,7 @@
     availabilityToggle.addEventListener('click', toggleAvailability);
     availabilityLate.addEventListener('click', toggleLateAvailability);
     availabilityPlayer.addEventListener('change', renderAvailability);
+    catModeToggle.addEventListener('click', toggleCatMode);
     tabs.forEach(tab => tab.addEventListener('click', () => activateTab(tab.dataset.tab)));
     document.querySelectorAll('[data-open-tab]').forEach(button => button.addEventListener('click', () => activateTab(button.dataset.openTab)));
     const initialTab = location.hash.slice(1);

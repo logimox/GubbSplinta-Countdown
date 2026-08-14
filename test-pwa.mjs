@@ -62,6 +62,29 @@ test('overview is compact with a single-row countdown, brief app note, and scann
   assert.match(styles, /@media \(max-width:700px\).*\.countdown-panel\.compact \.grid\{grid-template-columns:repeat\(4,1fr\)/s);
 });
 
+test('FAQ is an expandable tab with friendly app and Discord guidance', async () => {
+  const page = await read('index.html');
+
+  assert.match(page, /data-tab="faq"/);
+  assert.match(page, /id="panel-faq"/);
+  assert.match(page, /<details class="faq-item">/);
+  assert.match(page, /Hur funkar webbsidan\?/);
+  assert.match(page, /Hur installerar jag appen\?/);
+  assert.match(page, /Hur funkar Discordbotten\?/);
+  assert.match(page, /\/rsvp/);
+});
+
+test('hidden cat control toggles the complete catgirl visual mode', async () => {
+  const page = await read('index.html');
+  const styles = await read('style.css');
+
+  assert.match(page, /id="catModeToggle"/);
+  assert.match(page, /function toggleCatMode\(\)/);
+  assert.match(page, /document\.body\.classList\.toggle\('catgirl-mode'\)/);
+  assert.match(styles, /\.cat-mode-toggle/);
+  assert.match(styles, /body\.catgirl-mode/);
+});
+
 test('non-overview tabs collapse the logo into an animated compact header', async () => {
   const page = await read('index.html');
   const styles = await read('style.css');
