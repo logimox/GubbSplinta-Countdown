@@ -62,6 +62,17 @@ test('overview is compact with a single-row countdown, brief app note, and scann
   assert.match(styles, /@media \(max-width:700px\).*\.countdown-panel\.compact \.grid\{grid-template-columns:repeat\(4,1fr\)/s);
 });
 
+test('non-overview tabs collapse the logo into an animated compact header', async () => {
+  const page = await read('index.html');
+  const styles = await read('style.css');
+
+  assert.match(page, /class="hero panel" id="hero"/);
+  assert.match(page, /hero\.classList\.toggle\('compact', tabName !== 'overview'\)/);
+  assert.match(styles, /\.hero\.compact/);
+  assert.match(styles, /\.hero\.compact \.lens-scene/);
+  assert.match(styles, /transition:/);
+});
+
 test('Discord publishing appears below the map selection, not in overview actions', async () => {
   const page = await read('index.html');
 

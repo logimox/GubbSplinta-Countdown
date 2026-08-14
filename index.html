@@ -20,7 +20,7 @@
   <div class="rain-layer" aria-hidden="true"></div>
   <div class="radar-scan" aria-hidden="true"></div>
   <main class="wrap">
-    <section class="hero panel">
+    <section class="hero panel" id="hero">
       <div class="lens-scene" aria-hidden="true">
         <div class="blood-drop"></div>
         <div class="lens top"></div>
@@ -113,6 +113,7 @@
     const dayTimeInput = document.getElementById('dayTime');
     const tabs = [...document.querySelectorAll('[data-tab]')];
     const tabPanels = [...document.querySelectorAll('.tab-panel')];
+    const hero = document.getElementById('hero');
     const targetText = document.getElementById('targetText');
     const countdownNote = document.getElementById('countdownNote');
     const copyStatus = document.getElementById('copyStatus');
@@ -159,6 +160,7 @@
     function activateTab(tabName) {
       tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === tabName));
       tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === `panel-${tabName}`));
+      hero.classList.toggle('compact', tabName !== 'overview');
       history.replaceState(null, '', `#${tabName}`);
     }
     function localDateKey(date) {
