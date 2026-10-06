@@ -1,11 +1,11 @@
 GubbSplinta Matchoff
-Uppdaterad: 2026-08-14T09:29:23.191Z
+Uppdaterad: 2026-10-06T10:10:43.952Z
 Spel: TISDAG 20:30
-Nästa tillfälle: TISDAG 18 AUGUSTI 2026 KL 20:30
-Tid kvar: 4 d, 9 h, 0 min, 36 sek
+Nästa tillfälle: TISDAG 6 OKTOBER 2026 KL 20:30
+Tid kvar: 0 d, 8 h, 19 min, 16 sek
 
 Aktuellt kartförslag:
-1. GhostS.sdc — Ghost
-2. Mise.sdc — Missile
-3. PanaS.sdc — Panama
-4. SteeP.sdc — Steel Squat
+1. BankP.sdc — Panama Bank
+2. KrauU.sdc — Krauser Lab
+3. PolaP.sdc — Polar Base
+4. ZiopD.sdc — Zioplex
